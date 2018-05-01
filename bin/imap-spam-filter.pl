@@ -5,6 +5,13 @@ use Mail::IMAPClient;
 use Carp;
 use YAML;
 use Data::Printer;
+use Mojo::Home;
+use DateTime::Format::RFC3501;
+use Carp::Always;
+ 
+# Find and manage the project root directory
+my $home = Mojo::Home->new;
+$home->detect;
 
 my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
 my $config_data;
@@ -18,29 +25,74 @@ eval {
     confess $@;
 };
 
-  my $imap = Mail::IMAPClient->new(
-    Server   => $config_data->{mail_server},
-    User     => $config_data->{username},
-    Password => $config_data->{password},
-    Ssl      => 1,
-    Uid      => 1,
-  );
+my $ban_heads = $home->rel_file('data/banned_email_headers.yml');
+if (-f "$ban_heads") {
+    eval {
+        open my $fh, '< :encoding(UTF-8)', "$ban_heads" or die "Failed to read $CONFIGFILE: $!";
+        $config_data->{banned_email_headers} = YAML::Load( do { local $/; <$fh> } );
+    } or do {
+        confess $@;
+    };
+}
 
-  my $folders = $imap->folders
-    or die "List folders error: ", $imap->LastError, "\n";
-  print "Folders: @$folders\n";
+my $imap = Mail::IMAPClient->new(
+Server   => $config_data->{mail_server},
+User     => $config_data->{username},
+Password => $config_data->{password},
+Ssl      => 1,
+Uid      => 1,
+);
 
-  $imap->select( $folders->[0] )
-    or die "Select '$folders->[0]' error: ", $imap->LastError, "\n";
+my $folders = $imap->folders
+or die "List folders error: ", $imap->LastError, "\n";
+#print "Folders: @$folders\n";
 
-  $imap->fetch_hash("FLAGS", "INTERNALDATE", "RFC822.SIZE")
-    or die "Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
+$imap->select( $folders->[0] )
+or die "Select '$folders->[0]' error: ", $imap->LastError, "\n";
 
+$imap->fetch_hash("FLAGS", "INTERNALDATE", "RFC822.SIZE")
+or die "Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
+
+
+# remove blocked senders
 for my $blocked(@{$config_data->{blocked_email}}) {
     my $uid_ar = $imap->search( 'FROM "'.$blocked.'"' ) or warn "search failed: $@\n";
-    p($uid_ar);  
-    $imap->move('INBOX.Spam',$uid_ar);
+    if (@$uid_ar) {
+        p($uid_ar);
+        $imap->move('INBOX.Spam',$uid_ar);
+    }
 }
+
+# remove blocked email headers
+for my $key (keys %{$config_data->{banned_email_headers}}) {
+    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
+        say "head: $key -> $item";
+        
+        my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
+        if (@$uid_ar) {
+            p($uid_ar);
+            $imap->move('INBOX.Spam',$uid_ar);
+        }
+    }
+}
+
+my $dt = time - 3 * 24 *60 *60;
+    
+    # 1-Jul-2002 13:50:05 +0200
+    say Mail::IMAPClient->Rfc3501_date($dt);
+# delay remove of ads
+for my $blocked(@{$config_data->{advertising_three_days}}) {
+    my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
+    say "###$search";
+    my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
+    if (defined $uid_ar) {
+        say "WARNING MOVE ADS TO SPAM";
+        p($uid_ar);
+        $imap->move('INBOX.Spam',$uid_ar);
+    }
+    
+}
+
 $imap->expunge;
 $imap->logout
     or die "Logout error: ", $imap->LastError, "\n";
