@@ -1,0 +1,6 @@
+---
+# List of banned email headers
+X-XClient-IP-Addr:
+  - 187.18.12.242
+  - 128.199.72.76
+
