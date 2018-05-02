@@ -6,9 +6,8 @@ use Carp;
 use YAML;
 use Data::Printer;
 use Mojo::Home;
-use DateTime::Format::RFC3501;
 use Carp::Always;
- 
+
 # Find and manage the project root directory
 my $home = Mojo::Home->new;
 $home->detect;
@@ -67,7 +66,7 @@ for my $blocked(@{$config_data->{blocked_email}}) {
 for my $key (keys %{$config_data->{banned_email_headers}}) {
     for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
         say "head: $key -> $item";
-        
+
         my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
         if (@$uid_ar) {
             p($uid_ar);
@@ -76,11 +75,10 @@ for my $key (keys %{$config_data->{banned_email_headers}}) {
     }
 }
 
-my $dt = time - 3 * 24 *60 *60;
-    
-    # 1-Jul-2002 13:50:05 +0200
-    say Mail::IMAPClient->Rfc3501_date($dt);
+
 # delay remove of ads
+my $dt = time - 3 * 24 *60 *60;
+
 for my $blocked(@{$config_data->{advertising_three_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
     say "###$search";
@@ -90,8 +88,24 @@ for my $blocked(@{$config_data->{advertising_three_days}}) {
         p($uid_ar);
         $imap->move('INBOX.Spam',$uid_ar);
     }
-    
+
 }
+
+# delay remove of info emails
+ $dt = time - 10 * 24 *60 *60;
+
+for my $blocked(@{$config_data->{advertising_ten_days}}) {
+    my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
+    say "###$search";
+    my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
+    if (defined $uid_ar) {
+        say "WARNING MOVE INFO TO SPAM";
+        p($uid_ar);
+        $imap->move('INBOX.Spam',$uid_ar);
+    }
+
+}
+
 
 $imap->expunge;
 $imap->logout
