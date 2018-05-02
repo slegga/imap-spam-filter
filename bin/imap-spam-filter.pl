@@ -34,6 +34,7 @@ if (-f "$ban_heads") {
     };
 }
 
+say $imap->Rfc3501_date(time());
 my $imap = Mail::IMAPClient->new(
 Server   => $config_data->{mail_server},
 User     => $config_data->{username},
@@ -68,7 +69,8 @@ for my $key (keys %{$config_data->{banned_email_headers}}) {
         say "head: $key -> $item";
 
         my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
-        if (@$uid_ar) {
+        if (defined $uid_ar && @$uid_ar) {
+	        say "MOVE TO SPAM BANNED: $key -> $item";
             p($uid_ar);
             $imap->move('INBOX.Spam',$uid_ar);
         }
@@ -83,7 +85,7 @@ for my $blocked(@{$config_data->{advertising_three_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
     say "###$search";
     my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
-    if (defined $uid_ar) {
+    if (defined $uid_ar && @$uid_ar) {
         say "WARNING MOVE ADS TO SPAM";
         p($uid_ar);
         $imap->move('INBOX.Spam',$uid_ar);
@@ -98,7 +100,7 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
     say "###$search";
     my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
-    if (defined $uid_ar) {
+    if (defined $uid_ar && @$uid_ar) {
         say "WARNING MOVE INFO TO SPAM";
         p($uid_ar);
         $imap->move('INBOX.Spam',$uid_ar);
