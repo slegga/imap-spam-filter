@@ -34,7 +34,6 @@ if (-f "$ban_heads") {
     };
 }
 
-say $imap->Rfc3501_date(time());
 my $imap = Mail::IMAPClient->new(
 Server   => $config_data->{mail_server},
 User     => $config_data->{username},
@@ -42,6 +41,8 @@ Password => $config_data->{password},
 Ssl      => 1,
 Uid      => 1,
 );
+
+say $imap->Rfc3501_date(time());
 
 my $folders = $imap->folders
 or die "List folders error: ", $imap->LastError, "\n";
