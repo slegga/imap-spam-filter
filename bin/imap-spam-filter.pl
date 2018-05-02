@@ -42,7 +42,7 @@ Ssl      => 1,
 Uid      => 1,
 );
 
-say $imap->Rfc3501_date(time());
+say $imap->Rfc3501_datetime(time());
 
 my $folders = $imap->folders
 or die "List folders error: ", $imap->LastError, "\n";
@@ -67,7 +67,7 @@ for my $blocked(@{$config_data->{blocked_email}}) {
 # remove blocked email headers
 for my $key (keys %{$config_data->{banned_email_headers}}) {
     for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
-        say "head: $key -> $item";
+        #say "head: $key -> $item";
 
         my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
         if (defined $uid_ar && @$uid_ar) {
@@ -84,7 +84,7 @@ my $dt = time - 3 * 24 *60 *60;
 
 for my $blocked(@{$config_data->{advertising_three_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
-    say "###$search";
+    #say "###$search";
     my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
     if (defined $uid_ar && @$uid_ar) {
         say "WARNING MOVE ADS TO SPAM";
