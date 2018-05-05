@@ -79,8 +79,8 @@ for my $key (keys %{$config_data->{banned_email_headers}}) {
 }
 
 
-# delay remove of ads
-my $dt = time - 3 * 24 *60 *60;
+# delay remove of ads only on dates not datetimes
+my $dt = time - 2 * 24 *60 *60;
 
 for my $blocked(@{$config_data->{advertising_three_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
@@ -95,11 +95,11 @@ for my $blocked(@{$config_data->{advertising_three_days}}) {
 }
 
 # delay remove of info emails
- $dt = time - 10 * 24 *60 *60;
+ $dt = time - 9 * 24 *60 *60;
 
 for my $blocked(@{$config_data->{advertising_ten_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
-    say "###$search";
+#    say "###$search";
     my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
     if (defined $uid_ar && @$uid_ar) {
         say "WARNING MOVE INFO TO SPAM";
