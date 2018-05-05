@@ -5,12 +5,11 @@ use Mail::IMAPClient;
 use Carp;
 use YAML;
 use Data::Printer;
-use Mojo::Home;
+use Mojo::File 'path';
 use Carp::Always;
 
 # Find and manage the project root directory
-my $home = Mojo::Home->new;
-$home->detect;
+my $home = path($0)->sibling('..');
 
 my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
 my $config_data;
@@ -24,7 +23,7 @@ eval {
     confess $@;
 };
 
-my $ban_heads = $home->rel_file('data/banned_email_headers.yml');
+my $ban_heads = $home->child('data/banned_email_headers.yml');
 if (-f "$ban_heads") {
     eval {
         open my $fh, '< :encoding(UTF-8)', "$ban_heads" or die "Failed to read $CONFIGFILE: $!";
