@@ -1,7 +1,7 @@
 ---
 # List of banned email headers
 Content-Type:
-  - "text/plain\;\ncharset=\"ibm852\""
+  - "text/plain\;\r\ncharset\=\"ibm852\""
 From:
   - Nike Outlet
   - Sunglasses Outlet
@@ -66,6 +66,7 @@ X-XClient-IP-Addr:
   - 79.110.30.34
   - 79.110.30.33
   - 79.110.30.32
+  - 78.30.21.148
   - 77.239.18.199
   - 74.207.240.86
   - 74.207.227.133
