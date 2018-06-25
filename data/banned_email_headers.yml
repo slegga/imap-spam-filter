@@ -2,7 +2,7 @@
 # List of banned email headers
 Content-Type:
   - "text/plain\;\r\ncharset\=\"ibm852\""
-  - "text/plain\; charset\=IBM852\; format\=flowed"
+  - "text/plain; charset=IBM852; format=flowed"
 From:
   - Nike Outlet
   - Sunglasses Outlet
