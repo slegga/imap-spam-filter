@@ -3,8 +3,10 @@
 use Mojo::Base -strict;
 use Mail::IMAPClient;
 use Carp;
-use YAML;
-use Data::Printer;
+use YAML::Tiny;
+use autodie;
+# use Data::Printer;
+use Mojo::JSON 'to_json';
 use Mojo::File 'path';
 use Carp::Always;
 
@@ -16,7 +18,7 @@ my $config_data;
 
 eval {
     open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
-    $config_data = YAML::Load(
+    $config_data = YAML::Tiny::Load(
         do { local $/; <$FH> }
     );    # slurp content
 } or do {
@@ -27,7 +29,7 @@ my $ban_heads = $home->child('data/banned_email_headers.yml');
 if (-f "$ban_heads") {
     eval {
         open my $fh, '< :encoding(UTF-8)', "$ban_heads" or die "Failed to read $CONFIGFILE: $!";
-        $config_data->{banned_email_headers} = YAML::Load( do { local $/; <$fh> } );
+        $config_data->{banned_email_headers} = YAML::Tiny::Load( do { local $/; <$fh> } );
     } or do {
         confess $@;
     };
@@ -39,9 +41,9 @@ User     => $config_data->{username},
 Password => $config_data->{password},
 Ssl      => 1,
 Uid      => 1,
-);
+) or die "Cant open email account: ". ($config_data->{mail_server}//'__UNDEF__'). ' User: ' . ($config_data->{username}//'__UNDEF');
 
-say $imap->Rfc3501_datetime(time());
+say $imap->Rfc3501_datetime(time()) if defined $imap;
 
 my $folders = $imap->folders
 or die "List folders error: ", $imap->LastError, "\n";
@@ -58,7 +60,7 @@ or die "Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
 for my $blocked(@{$config_data->{blocked_email}}) {
     my $uid_ar = $imap->search( 'FROM "'.$blocked.'"' ) or warn "search failed: $@\n";
     if (@$uid_ar) {
-        p($uid_ar);
+        say to_json($uid_ar);
         $imap->move('INBOX.Spam',$uid_ar);
     }
 }
