@@ -73,7 +73,7 @@ for my $key (keys %{$config_data->{banned_email_headers}}) {
         my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
         if (defined $uid_ar && @$uid_ar) {
 	        say "MOVE TO SPAM BANNED: $key -> $item";
-            p($uid_ar);
+#            p($uid_ar);
             $imap->move('INBOX.Spam',$uid_ar);
         }
     }
@@ -89,7 +89,7 @@ for my $blocked(@{$config_data->{advertising_three_days}}) {
     my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
     if (defined $uid_ar && @$uid_ar) {
         say "WARNING MOVE ADS TO SPAM";
-        p($uid_ar);
+#        p($uid_ar);
         $imap->move('INBOX.Spam',$uid_ar);
     }
 
@@ -104,7 +104,7 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
     my $uid_ar = $imap->search( $search ) or warn "search failed: $@\n";
     if (defined $uid_ar && @$uid_ar) {
         say "WARNING MOVE INFO TO SPAM";
-        p($uid_ar);
+#        p($uid_ar);
         $imap->move('INBOX.Spam',$uid_ar);
     }
 
