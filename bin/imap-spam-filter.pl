@@ -10,6 +10,12 @@ use Mojo::JSON 'to_json';
 use Mojo::File 'path';
 use Carp::Always;
 
+=head1 NAME
+
+imap-spam-filter.pl
+
+=cut
+
 # Find and manage the project root directory
 my $home = path($0)->sibling('..');
 
