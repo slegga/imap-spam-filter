@@ -1,6 +1,6 @@
 use Test::More;
 use FindBin;
-use lib "$FindBin::Bin/../../utillities-perl/lib";
+use lib "$FindBin::Bin/../../utilities-perl/lib";
 use SH::Test::Pod;
 
 check_modules_pod({
