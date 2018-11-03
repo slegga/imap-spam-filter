@@ -116,6 +116,10 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
 
 }
 
+# TODO: remove duplicated emails
+
+
+# TODO: Only keep 1 or x of emails from this sender.
 
 $imap->expunge;
 $imap->logout
