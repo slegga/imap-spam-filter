@@ -9,6 +9,9 @@ use autodie;
 use Mojo::JSON 'to_json';
 use Mojo::File 'path';
 use Carp::Always;
+use FindBin;
+use lib "$FindBin::Bin/../../utilities-perl/lib";
+use SH::PrettyPrint;
 
 =head1 NAME
 
@@ -87,7 +90,7 @@ for my $key (keys %{$config_data->{banned_email_headers}}) {
 
 
 # delay remove of ads only on dates not datetimes
-my $dt = time - 2 * 24 *60 *60;
+my $dt = time - 36 *60 *60;
 
 for my $blocked(@{$config_data->{advertising_three_days}}) {
     my $search = 'FROM "'.$blocked.'" BEFORE '.$imap->Rfc3501_date($dt);#45646545644"';#.$imap->Quote($imap->Rfc3501_datetime($dt));#Rfc822_date($dt));
@@ -117,7 +120,10 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
 }
 
 # TODO: remove duplicated emails
+my @all = $imap->messages;
+my $hashref = $imap->parse_headers($imap->messages, "Date", "Subject")  or die "Could not parse_headers: $@\n";
 
+print_hashes $hashref;
 
 # TODO: Only keep 1 or x of emails from this sender.
 
