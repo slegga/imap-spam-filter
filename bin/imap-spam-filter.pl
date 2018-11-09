@@ -119,7 +119,7 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
 
 }
 
-# TODO: remove duplicated emails
+# Remove duplicated emails
 my @all = $imap->messages;
 my $hashref = $imap->parse_headers(\@all, #"ALL"
  "Date","Subject","Return-Path","From"
@@ -135,8 +135,21 @@ while (my ($key,$value) = each %$hashref) {
 	push @hashes, $return;
 }
 @hashes = sort{ $a->{uid} <=> $b->{uid} } @hashes;
+my $prev_email;
+for my $email(@hashes) {
+	if ($prev_email) {
+		if (substr($prev_email->{Date},0,24) eq substr($email->{Date},0,24) && $prev_email->{Subject} eq $email->{Subject} && $prev_email->{From} eq $email->{From} && $prev_email->{'Return-Path'} eq $email->{'Return-Path'}  ) {
+#			p $email;
+#			p $prev_email;
 
-#TODO: Finn lik header from return-path nesten samme størrelse og tidspunkt
+			my $move_uid = $prev_email->{size} > $email->{size} ? $email->{uid} : $prev_email->{uid};
+			say "MOVE DUPLICATE ". $move_uid;
+			$imap->move('INBOX.Spam',$move_uid);
+		}
+	}
+	$prev_email = $email;
+}
+
 
 #SH::PrettyPrint::print_hashes \@hashes;
 
