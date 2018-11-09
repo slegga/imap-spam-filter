@@ -5,7 +5,7 @@ use Mail::IMAPClient;
 use Carp;
 use YAML::Tiny;
 use autodie;
-# use Data::Printer;
+use Data::Printer;
 use Mojo::JSON 'to_json';
 use Mojo::File 'path';
 use Carp::Always;
@@ -48,7 +48,7 @@ my $imap = Mail::IMAPClient->new(
 Server   => $config_data->{mail_server},
 User     => $config_data->{username},
 Password => $config_data->{password},
-Ssl      => 1,
+#Ssl      => 1,
 Uid      => 1,
 ) or die "Cant open email account: ". ($config_data->{mail_server}//'__UNDEF__'). ' User: ' . ($config_data->{username}//'__UNDEF');
 
@@ -121,9 +121,21 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
 
 # TODO: remove duplicated emails
 my @all = $imap->messages;
-my $hashref = $imap->parse_headers($imap->messages, "Date", "Subject")  or die "Could not parse_headers: $@\n";
+my $hashref = $imap->parse_headers(\@all, "Date","Subject","Return-Path"
+)  or die "Could not parse_headers: $@\n";
+my @hashes;
+my $return;
+while (my ($key,$value) = each %$hashref) {
+	$return->{uid} = $key;
+	for my $k(keys %$value) {
+		$return->{$k} = $value->{$k}->[0];
+	}
+	push @hashes, $return;
+}
 
-print_hashes $hashref;
+#TODO: Få skrevet ut alle emailene.
+#SH::PrettyPrint::print_hashes \@hashes;
+#p @hashes;
 
 # TODO: Only keep 1 or x of emails from this sender.
 
