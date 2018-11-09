@@ -121,21 +121,24 @@ for my $blocked(@{$config_data->{advertising_ten_days}}) {
 
 # TODO: remove duplicated emails
 my @all = $imap->messages;
-my $hashref = $imap->parse_headers(\@all, "Date","Subject","Return-Path"
+my $hashref = $imap->parse_headers(\@all, #"ALL"
+ "Date","Subject","Return-Path","From"
 )  or die "Could not parse_headers: $@\n";
 my @hashes;
-my $return;
 while (my ($key,$value) = each %$hashref) {
+	my $return={};
 	$return->{uid} = $key;
 	for my $k(keys %$value) {
 		$return->{$k} = $value->{$k}->[0];
 	}
+	$return->{size} = $imap->size($return->{uid});
 	push @hashes, $return;
 }
+@hashes = sort{ $a->{uid} <=> $b->{uid} } @hashes;
 
-#TODO: Få skrevet ut alle emailene.
+#TODO: Finn lik header from return-path nesten samme størrelse og tidspunkt
+
 #SH::PrettyPrint::print_hashes \@hashes;
-#p @hashes;
 
 # TODO: Only keep 1 or x of emails from this sender.
 
