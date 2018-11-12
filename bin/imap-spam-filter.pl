@@ -154,16 +154,18 @@ for my $email(@hashes) {
 		}
 	}
 	$prev_email = $email;
-	if ($email->{Subject} =~/$prefix.*$weekword.*\b(\d+)/) {
+	if ($email->{Subject} =~/^$prefix.*$weekword.*\s(\d+)/i) {
 		my $sub_week = $1;
-		my $week_diff = $curr_week - $sub_week;
+		if ( $sub_week>0 ) {
+			my $week_diff = $curr_week - $sub_week;
 
-		# Try to handle new year
-		$week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
+			# Try to handle new year
+			$week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
 
-		if ($week_diff >0 && $week_diff < 5) {
-			say "MOVE PASSED WEEK ". $email->{uid} . ' Subject: '. $email->{Subject};
-			$imap->move('INBOX.Spam',$move_uid);
+			if ($week_diff >0 && $week_diff < 5) {
+				say "MOVE PASSED WEEK ". $email->{uid} . ' Subject: '. $email->{Subject};
+				$imap->move( 'INBOX.Spam',$email->{uid} );
+			}
 		}
 	}
 }
