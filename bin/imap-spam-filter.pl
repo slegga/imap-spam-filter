@@ -12,6 +12,7 @@ use Carp::Always;
 use FindBin;
 use lib "$FindBin::Bin/../../utilities-perl/lib";
 use SH::PrettyPrint;
+use Time::Piece;
 
 =head1 NAME
 
@@ -135,6 +136,11 @@ while (my ($key,$value) = each %$hashref) {
 	push @hashes, $return;
 }
 @hashes = sort{ $a->{uid} <=> $b->{uid} } @hashes;
+my $t = localtime;
+my $curr_week = $t->week;
+my $curr_year = $t->year;
+my $weekword = $config_data->{weekword}|| 'uke';
+my $prefix =   $config_data->{weekword}|| 'Melding fra ';
 my $prev_email;
 for my $email(@hashes) {
 	if ($prev_email) {
@@ -148,6 +154,18 @@ for my $email(@hashes) {
 		}
 	}
 	$prev_email = $email;
+	if ($email->{Subject} =~/$prefix.*$weekword.*\b(\d+)/) {
+		my $sub_week = $1;
+		my $week_diff = $curr_week - $sub_week;
+
+		# Try to handle new year
+		$week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
+
+		if ($week_diff >0 && $week_diff < 5) {
+			say "MOVE PASSED WEEK ". $email->{uid} . ' Subject: '. $email->{Subject};
+			$imap->move('INBOX.Spam',$move_uid);
+		}
+	}
 }
 
 
