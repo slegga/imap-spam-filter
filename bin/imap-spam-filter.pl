@@ -154,7 +154,7 @@ for my $email(@hashes) {
 		}
 	}
 	$prev_email = $email;
-	if ($email->{Subject} =~/^$prefix.*$weekword.*\s(\d+)/i) {
+	if ($email->{Subject} && $email->{Subject} =~/^$prefix.*$weekword.*\s(\d+)/i) {
 		my $sub_week = $1;
 		if ( $sub_week>0 ) {
 			my $week_diff = $curr_week - $sub_week;
