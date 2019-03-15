@@ -46,7 +46,7 @@ if (-f "$ban_heads") {
 }
 
 
-for my $emc( grep {ref $config_data->{$_} eq 'HASH' } keys %$config_data) {
+for my $emc( grep {ref $config_data->{$_} eq 'HASH'} keys %$config_data) {
 	next if $emc eq 'banned_email_headers';
 	next if $emc eq 'advertising_three_days';
 	next if $emc eq 'blocked_email';
