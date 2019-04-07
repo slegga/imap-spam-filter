@@ -28,6 +28,7 @@ has home => sub { path($0)->sibling('..') };
 option 'verbose!', 'Turn on verbose output';
 option 'debug!', 'Turn on debug output';
 option 'info!',  'Print out config data. And exit';
+option 'server=s', 'regexp på server name, for running only one or few not all';
 
 sub main {
 
@@ -68,6 +69,10 @@ sub main {
     	next if $emc eq 'advertising_three_days';
     	next if $emc eq 'blocked_email';
     	next if $emc eq 'advertising_ten_days';
+        if  ($self->server) {
+            my $s = $self->server;
+            next if $emc!~/$s/;
+        }
     	my $imap = Mail::IMAPClient->new(
     	Server   => $config_data->{$emc}->{Server},
     	User     => $config_data->{$emc}->{Username},
@@ -81,9 +86,9 @@ sub main {
 
     	my $folders = $imap->folders
     	or die "$emc: List folders error: ", $imap->LastError, "\n";
-    	#print "Folders: @$folders\n";
+    	printf "Folders: %s\n",join("\n",@$folders);
 
-    	$imap->select( $folders->[0] )
+    	$imap->select( 'INBOX' )
     	or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
 
     	$imap->fetch_hash("FLAGS", "INTERNALDATE", "RFC822.SIZE")
