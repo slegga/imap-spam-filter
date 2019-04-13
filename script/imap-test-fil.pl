@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-  
+
 use Mojo::Base -strict;
 use Mail::IMAPClient;
 use Carp;
@@ -16,6 +16,7 @@ use SH::PrettyPrint;
 use SH::ScriptX; # call SH::ScriptX->import
 use Mojo::Base 'SH::ScriptX';
 use Time::Piece;
+use DateTime::Format::RFC3501;
 
 =head1 NAME
 
@@ -70,7 +71,7 @@ say "XXXX";
         next if $emc eq 'advertising_three_days';
         next if $emc eq 'blocked_email';
         next if $emc eq 'advertising_ten_days';
- say "XXXR";       
+ say "XXXR";
         if  ($self->server) {
             my $s = $self->server;
             next if $emc!~/$s/;
@@ -90,13 +91,25 @@ say "XXXX";
         my $folders = $imap->folders
         or die "$emc: List folders error: ", $imap->LastError, "\n";
         printf "Folders: %s\n",join("\n",@$folders);
-        
-        $imap->select( 'INBOX.Behandlet' )
-    	or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
-    	my $old = time - 2*365*24*60*60;
-    	my @msgs = $imap->sentsince($old)
-  or warn "Could not find any messages sent since $old: $@\n";
-        say join(' ',@msgs);
+
+		if (grep{$_ eq 'INBOX.Behandlet'}@$folders) {
+	        $imap->select( 'INBOX.Behandlet' )
+	    	or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
+	    	my $Rfc3501_date = $imap->Rfc3501_date(time - 2.5*365*24*60*60); #
+	    	my @msgs = $imap->before($Rfc3501_date)
+	  or warn "Could not find any messages sent since $Rfc3501_date: $@\n";
+	        say join(' ',grep{ defined }@msgs);
+            my %points;
+            my $f = DateTime::Format::RFC3501->new();
+            for my $i (@msgs) {
+
+                my $tmp = $imap->fetch_hash($i, "RFC822.SIZE",'ENVELOPE')->{$i};
+                p $tmp;
+                warn  $tmp->{ENVELOPE};
+                my $point = $f->parse_datetime( $tmp->{ENVELOPE} );
+                $points{$point} = $i;
+            }
+	    }
         $imap->expunge;
         $imap->logout
             or die "Logout error: ", $imap->LastError, "\n";
