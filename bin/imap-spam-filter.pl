@@ -86,7 +86,7 @@ sub main {
 
     	my $folders = $imap->folders
     	or die "$emc: List folders error: ", $imap->LastError, "\n";
-    	printf "Folders: %s\n",join("\n",@$folders);
+#    	printf "Folders: %s\n",join("\n",@$folders);
 
     	$imap->select( 'INBOX' )
     	or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
