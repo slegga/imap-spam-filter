@@ -16,6 +16,7 @@ use SH::PrettyPrint;
 use SH::ScriptX; # call SH::ScriptX->import
 use Mojo::Base 'SH::ScriptX';
 use Time::Piece;
+use NetAddr::IP;
 
 =head1 NAME
 
@@ -109,14 +110,18 @@ sub main {
     	    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
     	        #say "head: $key -> $item";
 
-    	        my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
-    	        if (defined $uid_ar && @$uid_ar) {
+#    	        my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
+    	        #if (defined $uid_ar && @$uid_ar) {
+				...; #TODO bruk SH::Email::ToHash
+				...;#todo NetAddr::IP: $me->contains($other)
     		        say "MOVE TO SPAM BANNED: $key -> $item";
     	#            p($uid_ar);
     	            $imap->move('INBOX.Spam',$uid_ar);
     	        }
     	    }
     	}
+        for my $netslice (@{$config_data->{banned_ip_slices}}) {
+        }
 
 
     	# delay remove of ads only on dates not datetimes
