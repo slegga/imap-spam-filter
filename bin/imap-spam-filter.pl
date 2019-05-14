@@ -110,10 +110,10 @@ sub main {
     	    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
     	        #say "head: $key -> $item";
 
-#    	        my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
-    	        #if (defined $uid_ar && @$uid_ar) {
-				...; #TODO bruk SH::Email::ToHash
-				...;#todo NetAddr::IP: $me->contains($other)
+    	        my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
+    	        if (defined $uid_ar && @$uid_ar) {
+				#...; #TODO bruk SH::Email::ToHash
+				#...;#todo NetAddr::IP: $me->contains($other)
     		        say "MOVE TO SPAM BANNED: $key -> $item";
     	#            p($uid_ar);
     	            $imap->move('INBOX.Spam',$uid_ar);
