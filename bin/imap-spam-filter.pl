@@ -51,15 +51,18 @@ sub main {
         confess $@;
     };
 
-    my $ban_heads = $self->home->child('data/banned_email_headers.yml');
-    if (-f "$ban_heads") {
-        eval {
-            open my $fh, '< :encoding(UTF-8)', "$ban_heads" or die "Failed to read $ban_heads: $!";
-            $config_data->{banned_email_headers} = YAML::Tiny::Load( do { local $/; <$fh> } );
-        } or do {
-            confess $@;
-        };
-    }
+	for my $name (qw /banned_email_headers banned_ip_slices/)  {
+	    my $file = $self->home->child("data/$name.yml");
+	    if (-f "$file") {
+	        eval {
+	            open my $fh, '< :encoding(UTF-8)', "$file" or die "Failed to read $file: $!";
+	            $config_data->{$name} = YAML::Tiny::Load( do { local $/; <$fh> } );
+	        } or do {
+	            confess $@;
+	        };
+	    }
+	}
+
     if ($self->info) {
         p $config_data ;
         return $self->gracefull_exit;
@@ -120,8 +123,12 @@ sub main {
     	        }
     	    }
     	}
-        for my $netslice (@{$config_data->{banned_ip_slices}}) {
-        }
+
+#        for my $netslice (@{$config_data->{banned_ip_slices}}) {
+#        	my $subnet = NetAddr::IP->new($netslice);
+#        	if ($ubnet->contains(''))
+#        	say $netslice;
+#        }
 
 
     	# delay remove of ads only on dates not datetimes
