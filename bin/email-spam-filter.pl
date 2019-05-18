@@ -104,7 +104,7 @@ sub main {
     	my @all = $imap->search('ALL')
     	or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
 
-        warn join(' ',@all);
+#        warn join(' ',@all);
 		my $convert = SH::Email::ToHash->new;
         my %keep;
         my %spam;
@@ -112,7 +112,7 @@ sub main {
             my $next = 0;
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
-            printf "%s\t%s\t%s\t%s\n",$uid,$email_h->{header}->{From}, $email_h->{header}->{'Return-Path'},$email_h->{header}->{Subject};
+#            printf "%s\t%s\t%s\t%s\n",$uid,$email_h->{header}->{From}, $email_h->{header}->{'Return-Path'},$email_h->{header}->{Subject};
             $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From});
             for my $blocked_from(@{$config_data->{blocked_email}}) {
                 if ($email_h->{calculated}->{from} eq $blocked_from ) {
