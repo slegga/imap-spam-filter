@@ -19,6 +19,8 @@ use Time::Piece;
 use NetAddr::IP;
 use SH::Email::ToHash;
 use Data::Dumper;
+use DateTime::Format::Mail;
+#use DateTime::Format::RFC3501;
 
 =head1 NAME
 
@@ -70,6 +72,7 @@ sub main {
         return $self->gracefull_exit;
     }
 
+    my $pf = DateTime::Format::Mail->new();
     for my $emc( grep {ref $config_data->{$_} eq 'HASH'} keys %$config_data) {
     	next if $emc eq 'banned_email_headers';
     	next if $emc eq 'advertising_three_days';
@@ -106,17 +109,82 @@ sub main {
         my %keep;
         my %spam;
         for my $uid(@all) {
+            my $next = 0;
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
             printf "%s\t%s\t%s\t%s\n",$uid,$email_h->{header}->{From}, $email_h->{header}->{'Return-Path'},$email_h->{header}->{Subject};
+            $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From});
             for my $blocked_from(@{$config_data->{blocked_email}}) {
-                if ($convert->extract_emailaddress($email_h->{header}->{From}) eq $blocked_from ) {
+                if ($email_h->{calculated}->{from} eq $blocked_from ) {
                     $spam{$uid} = 'blocked From';
+                    $next=1;
+                    last;
                 }
             }
+            next if $next;
+
+            #TODO: Some whitelisting of email adresses sent to or in address book
+            # remove blocked email headers
+        	for my $key (keys %{$config_data->{banned_email_headers}}) {
+        	    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
+        	        #say "head: $key -> $item";
+
+        	        #my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
+                    next if ! $item;
+                    next if not exists $email_h->{header}->{$key};
+                    if (index($email_h->{header}->{$key},$item)>-1) {
+                        $spam{$uid} = "banned_header_$key";
+                        $next=1;
+                        last;
+                    }
+        	    }
+        	}
+
+            # delay remove of ads only on dates not datetimes
+        	my $dt = time - 36 *60 *60;
+            my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1];
+#            warn $res;
+            $res =~s/^[\W]+//;
+            $res =~s /\s*\(\w+\)$//;
+#            warn $res;
+            eval {
+                $email_h->{calculated}->{received} = $pf->parse_datetime( $res )->epoch;
+            };
+            if ($@) {
+                warn $res;
+                warn Dumper $email_h->{header}->{Received};
+                die $@;
+            }
+            die "Can not get Received date " .Dumper $email_h->{header}->{Received} if !$res;
+            if ($dt > $email_h->{calculated}->{received}) {
+            	for my $blocked(@{$config_data->{advertising_three_days}}) {
+                    next if $blocked ne $email_h->{calculated}->{received};
+                    $spam{$uid} = 'Ad after 3 days';
+            	}
+            }
+
+        	# delay remove of info emails
+            $dt = time - 9 * 24 *60 *60;
+            if ($dt > $email_h->{calculated}->{received}) {
+            	for my $blocked(@{$config_data->{advertising_three_days}}) {
+                    next if $blocked ne $email_h->{calculated}->{received};
+                    $spam{$uid} = 'Ad after 10 days';
+            	}
+            }
+
+
+
+            # 		#...; #TODO bruk SH::Email::ToHash
+    		# 		#...;#todo NetAddr::IP: $me->contains($other)
 
         }
-
+        if (keys %spam) {
+            p %spam;
+            for my $uid(keys %spam) {
+                say "$uid moved to spam ".$spam{$uid};
+                $imap->move('INBOX.Spam',$uid);
+            }
+        }
     	#SH::PrettyPrint::print_hashes \@hashes;
 
     	# TODO: Only keep 1 or x of emails from this sender.
