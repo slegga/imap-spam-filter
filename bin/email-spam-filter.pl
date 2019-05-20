@@ -5,7 +5,7 @@ use Mail::IMAPClient;
 use Carp;
 use YAML::Tiny;
 use autodie;
-use Data::Printer;
+#use Data::Printer;
 use Mojo::JSON 'to_json';
 use Mojo::File 'path';
 use Carp::Always;
@@ -146,7 +146,6 @@ sub main {
 #            warn $res;
             $res =~s/^[\W]+//;
             $res =~s /\s*\(\w+\)$//;
-#            warn $res;
             eval {
                 $email_h->{calculated}->{received} = $pf->parse_datetime( $res )->epoch;
             };
@@ -179,7 +178,6 @@ sub main {
 
         }
         if (keys %spam) {
-            p %spam;
             for my $uid(keys %spam) {
                 say "$uid moved to spam ".$spam{$uid};
                 $imap->move('INBOX.Spam',$uid);
