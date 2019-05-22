@@ -20,6 +20,7 @@ use NetAddr::IP;
 use SH::Email::ToHash;
 use Data::Dumper;
 use DateTime::Format::Mail;
+use Hash::Merge 'merge';
 #use DateTime::Format::RFC3501;
 
 =head1 NAME
@@ -60,7 +61,12 @@ sub main {
 	    if (-f "$file") {
 	        eval {
 	            open my $fh, '< :encoding(UTF-8)', "$file" or die "Failed to read $file: $!";
-	            $config_data->{$name} = YAML::Tiny::Load( do { local $/; <$fh> } );
+	            my $tmp = YAML::Tiny::Load( do { local $/; <$fh> } );
+	            if (exists $config_data->{$name}) {
+		            $config_data->{$name} = merge( $config_data->{$name}, $tmp);
+		        } else {
+		        	$config_data->{$name} = $tmp;
+		        }
 	        } or do {
 	            confess $@;
 	        };
@@ -68,7 +74,7 @@ sub main {
 	}
 
     if ($self->info) {
-        p $config_data ;
+        print Dumper $config_data;
         return $self->gracefull_exit;
     }
 
