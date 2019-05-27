@@ -21,6 +21,8 @@ use SH::Email::ToHash;
 use Data::Dumper;
 use DateTime::Format::Mail;
 use Hash::Merge 'merge';
+use Digest::MD5 qw(md5_base64);
+use Clone 'clone';
 #use DateTime::Format::RFC3501;
 
 =head1 NAME
@@ -114,11 +116,49 @@ sub main {
 		my $convert = SH::Email::ToHash->new;
         my %keep;
         my %spam;
+        my $prev_email_h;
+        my $t = localtime;
+       my $curr_week = $t->week;
+       my $curr_year = $t->year;
+
+        my $weekword = $config_data->{$emc}->{weekword}|| 'uke';
+        my $prefix =   $config_data->{$emc}->{weekword}|| 'Melding fra ';
         for my $uid(@all) {
             my $next = 0;
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
-#            printf "%s\t%s\t%s\t%s\n",$uid,$email_h->{header}->{From}, $email_h->{header}->{'Return-Path'},$email_h->{header}->{Subject};
+            $email_h->{calculated}->{size} = $imap->size($uid);
+            $email_h->{uid}=$uid;
+            # Remove duplicated emails
+            if ($prev_email_h && $email_h) {
+                if (
+                substr($prev_email_h->{header}->{Date},0,24) eq substr($email_h->{header}->{Date},0,24)
+                && $prev_email_h->{header}->{Subject}        eq $email_h->{header}->{Subject}
+                && $prev_email_h->{header}->{From}           eq $email_h->{header}->{From}
+                && $prev_email_h->{header}->{'Return-Path'}  eq $email_h->{header}->{'Return-Path'}  ) {
+                    my $move_uid;
+                    $move_uid = $prev_email_h->{calculated}->{size} > $email_h->{calculated}->{size} ? $email_h->{uid} : $prev_email_h->{uid};
+                    say "MOVE DUPLICATE ". $move_uid;
+                    $imap->move('INBOX.Spam',$move_uid);
+                }
+
+                #remove old weeks
+                if ($email_h->{Subject} && $email_h->{Subject} =~/^$prefix.*$weekword.*\s(\d+)/i) {
+                    my $sub_week = $1;
+                    if ( $sub_week>0 ) {
+                       my $week_diff = $curr_week - $sub_week;
+
+                       # Try to handle new year
+                       $week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
+                       if ($week_diff >0 && $week_diff < 5) {
+                           say "MOVE PASSED WEEK ". $email_h->{uid} . ' Subject: '. $email_h->{Subject};
+                           $imap->move( 'INBOX.Spam',$email_h->{uid} );
+                       }
+                   }
+                }
+            }
+            $prev_email_h = clone $email_h;
+
             $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From});
             for my $blocked_from(@{$config_data->{blocked_email}}) {
                 if ($email_h->{calculated}->{from} eq $blocked_from ) {
