@@ -203,7 +203,7 @@ sub main {
             die "Can not get Received date " .Dumper $email_h->{header}->{Received} if !$res;
             if ($dt > $email_h->{calculated}->{received}) {
             	for my $blocked(@{$config_data->{advertising_three_days}}) {
-                    next if $blocked ne $email_h->{calculated}->{received};
+                    next if $blocked ne $email_h->{calculated}->{from};
                     $spam{$uid} = 'Ad after 3 days';
             	}
             }
@@ -212,7 +212,7 @@ sub main {
             $dt = time - 9 * 24 *60 *60;
             if ($dt > $email_h->{calculated}->{received}) {
             	for my $blocked(@{$config_data->{advertising_three_days}}) {
-                    next if $blocked ne $email_h->{calculated}->{received};
+                    next if $blocked ne $email_h->{calculated}->{from};
                     $spam{$uid} = 'Ad after 10 days';
             	}
             }
