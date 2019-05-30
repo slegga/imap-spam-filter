@@ -134,11 +134,18 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
         # delete trash
 	}
 
-    # delete in spam
+    #delete files in /tmp
+    # Mail::IMAPClient produces alot of files in /tmp
+    # Gets disk error if no housekeeping of /tmp
 
-    # delete in behandlet
-
-    # sent
+    my @tmpfiles=path('/tmp')->list_tree->each;
+    for my $f(@tmpfiles) {
+        next if "$f" =~ /^systemd/;
+        next if "$f" =~ /\.sock$/;
+        if ($f->lstat->mtime > time - 14 * 24 * 60 * 60) {
+            unlink "$f";
+        }
+    }
 }
 
 __PACKAGE__->new->main();
