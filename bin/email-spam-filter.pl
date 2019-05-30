@@ -113,7 +113,7 @@ sub main {
     	or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
 
 #        warn join(' ',@all);
-		my $convert = SH::Email::ToHash->new;
+		my $convert = SH::Email::ToHash->new(tmpdir='/tmp/emails');
         my %keep;
         my %spam;
         my $prev_email_h;
