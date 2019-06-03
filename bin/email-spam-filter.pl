@@ -132,7 +132,7 @@ sub main {
             # Remove duplicated emails
             if ($prev_email_h && $email_h) {
                 if (
-                substr($prev_email_h->{header}->{Date},0,24) eq substr($email_h->{header}->{Date},0,24)
+                $prev_email_h->{header}->{Date} eq substr($email_h->{header}->{Date},0,24)
                 && $prev_email_h->{header}->{Subject}        eq $email_h->{header}->{Subject}
                 && $prev_email_h->{header}->{From}           eq $email_h->{header}->{From}
                 && $prev_email_h->{header}->{'Return-Path'}  eq $email_h->{header}->{'Return-Path'}  ) {
@@ -159,8 +159,9 @@ sub main {
             }
             $prev_email_h = clone $email_h;
 
-            $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From});
+            $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From}) or next;
             for my $blocked_from(@{$config_data->{blocked_email}}) {
+                next if ! $blocked_from;
                 if ($email_h->{calculated}->{from} eq $blocked_from ) {
                     $spam{$uid} = 'blocked From';
                     $next=1;
