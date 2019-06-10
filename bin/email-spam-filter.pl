@@ -129,10 +129,11 @@ sub main {
             my $email_h = $convert->msgtext2hash($text);
             $email_h->{calculated}->{size} = $imap->size($uid);
             $email_h->{uid}=$uid;
+
             # Remove duplicated emails
             if ($prev_email_h && $email_h) {
-                if (
-                $prev_email_h->{header}->{Date} eq substr($email_h->{header}->{Date},0,24)
+                if ( exists $prev_email_h->{header}->{Date}
+                && $prev_email_h->{header}->{Date} eq substr($email_h->{header}->{Date},0,24)
                 && $prev_email_h->{header}->{Subject}        eq $email_h->{header}->{Subject}
                 && $prev_email_h->{header}->{From}           eq $email_h->{header}->{From}
                 && $prev_email_h->{header}->{'Return-Path'}  eq $email_h->{header}->{'Return-Path'}  ) {
