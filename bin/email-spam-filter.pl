@@ -133,10 +133,11 @@ sub main {
             # Remove duplicated emails
             if ($prev_email_h && $email_h) {
                 if ( exists $prev_email_h->{header}->{Date}
-                && $prev_email_h->{header}->{Date} eq substr($email_h->{header}->{Date},0,24)
-                && $prev_email_h->{header}->{Subject}        eq $email_h->{header}->{Subject}
-                && $prev_email_h->{header}->{From}           eq $email_h->{header}->{From}
-                && $prev_email_h->{header}->{'Return-Path'}  eq $email_h->{header}->{'Return-Path'}  ) {
+                &&   exists $email_h->{header}->{Date}
+                && substr($prev_email_h->{header}->{Date},0,24) eq substr($email_h->{header}->{Date},0,24)
+                && $prev_email_h->{header}->{Subject}           eq $email_h->{header}->{Subject}
+                && $prev_email_h->{header}->{From}              eq $email_h->{header}->{From}
+                && $prev_email_h->{header}->{'Return-Path'}     eq $email_h->{header}->{'Return-Path'}  ) {
                     my $move_uid;
                     $move_uid = $prev_email_h->{calculated}->{size} > $email_h->{calculated}->{size} ? $email_h->{uid} : $prev_email_h->{uid};
                     say "MOVE DUPLICATE ". $move_uid;
