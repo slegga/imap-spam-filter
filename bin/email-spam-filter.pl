@@ -212,13 +212,20 @@ sub main {
         	# delay remove of info emails
             $dt = time - 9 * 24 *60 *60;
             if ($dt > $email_h->{calculated}->{received}) {
-            	for my $blocked(@{$config_data->{advertising_three_days}}) {
+            	for my $blocked(@{$config_data->{advertising_ten_days}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
                     $spam{$uid} = 'Ad after 10 days';
             	}
             }
 
 
+            $dt = time - 30 * 24 *60 *60;
+            if ($dt > $email_h->{calculated}->{received}) {
+            	for my $blocked(@{$config_data->{newsletters}}) {
+                    next if $blocked ne $email_h->{calculated}->{from};
+                    $spam{$uid} = 'newsletters  after 30 days';
+            	}
+            }
 
             # 		#...; #TODO bruk SH::Email::ToHash
     		# 		#...;#todo NetAddr::IP: $me->contains($other)
