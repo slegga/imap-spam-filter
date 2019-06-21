@@ -137,8 +137,9 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
     #delete files in /tmp
     # Mail::IMAPClient produces alot of files in /tmp
     # Gets disk error if no housekeeping of /tmp
-
-	`rm -rf /tmp/emails`;
+	if (-d '/tmp/emails') {
+		`rm -rf /tmp/emails`;
+	}
 #    my @tmpfiles=path('/tmp')->list_tree->each;
 #    for my $f(@tmpfiles) {
 #        next if "$f" =~ /^systemd/;
