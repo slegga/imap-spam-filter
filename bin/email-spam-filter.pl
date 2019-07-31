@@ -174,20 +174,36 @@ sub main {
 
             #TODO: Some whitelisting of email adresses sent to or in address book
             # remove blocked email headers
-        	for my $key (keys %{$config_data->{banned_email_headers}}) {
-        	    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
-        	        #say "head: $key -> $item";
+            
+            if (exists $config_data->{banned_email_headers}) {
+                for my $key (keys %{$config_data->{banned_email_headers}}) {
+                    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
+                        #say "head: $key -> $item";
 
-        	        #my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
+                        #my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
+                        next if ! $item;
+                        next if not exists $email_h->{header}->{$key};
+                        if (index($email_h->{header}->{$key},$item)>-1) {
+                            $spam{$uid} = "banned_header_$key";
+                            $next=1;
+                            last;
+                        }
+                    }
+                }
+            }
+                
+            next if $next;
+            if (exists $config_data->{banned_body_regexp}) {
+                for my $item (@{$config_data->{banned_body_regexp}}) {
                     next if ! $item;
-                    next if not exists $email_h->{header}->{$key};
-                    if (index($email_h->{header}->{$key},$item)>-1) {
-                        $spam{$uid} = "banned_header_$key";
+                    if ( $email_h->{body}=~ /$item/ ) {
+                        $spam{$uid} = "banned_body_$item";
                         $next=1;
                         last;
                     }
-        	    }
-        	}
+                }
+            }
+            next if $next;
 
             # delay remove of ads only on dates not datetimes
         	my $dt = time - 36 *60 *60;
@@ -239,6 +255,8 @@ sub main {
                 $imap->move('INBOX.Spam',$uid);
             }
         }
+
+
     	#SH::PrettyPrint::print_hashes \@hashes;
 
     	# TODO: Only keep 1 or x of emails from this sender.
