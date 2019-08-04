@@ -197,6 +197,7 @@ sub main {
                 for my $item (@{$config_data->{banned_body_regexp}}) {
                     next if ! $item;
                     last if ! exists $email_h->{body}->{content};
+                    last if ! defined $email_h->{body}->{content};
                     if ( $email_h->{body}->{content} =~ /$item/ ) {
                         $spam{$uid} = "banned_body_$item";
                         $next=1;
