@@ -174,7 +174,7 @@ sub main {
 
             #TODO: Some whitelisting of email adresses sent to or in address book
             # remove blocked email headers
-            
+
             if (exists $config_data->{banned_email_headers}) {
                 for my $key (keys %{$config_data->{banned_email_headers}}) {
                     for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
@@ -191,12 +191,12 @@ sub main {
                     }
                 }
             }
-                
+
             next if $next;
             if (exists $config_data->{banned_body_regexp}) {
                 for my $item (@{$config_data->{banned_body_regexp}}) {
                     next if ! $item;
-                    if ( $email_h->{body}=~ /$item/ ) {
+                    if ( $email_h->{body}->{content} =~ /$item/ ) {
                         $spam{$uid} = "banned_body_$item";
                         $next=1;
                         last;
