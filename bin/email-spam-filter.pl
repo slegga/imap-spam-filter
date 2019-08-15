@@ -140,8 +140,7 @@ sub main {
                 && $prev_email_h->{header}->{'Return-Path'}     eq $email_h->{header}->{'Return-Path'}  ) {
                     my $move_uid;
                     $move_uid = $prev_email_h->{calculated}->{size} > $email_h->{calculated}->{size} ? $email_h->{uid} : $prev_email_h->{uid};
-                    say "MOVE DUPLICATE ". $move_uid;
-                    $imap->move('INBOX.Spam',$move_uid);
+                    $spam{$move_uid} = "MOVE DUPLICATE ". $move_uid. '; '.$prev_email_h->{header}->{Subject};
                 }
 
                 #remove old weeks
@@ -153,8 +152,7 @@ sub main {
                        # Try to handle new year
                        $week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
                        if ($week_diff >0 && $week_diff < 5) {
-                           say "MOVE PASSED WEEK ". $email_h->{uid} . ' Subject: '. $email_h->{Subject};
-                           $imap->move( 'INBOX.Spam',$email_h->{uid} );
+                           $spam{$email_h->{uid}} = "MOVE PASSED WEEK ". $email_h->{uid} . ' Subject: '. $email_h->{Subject};
                        }
                    }
                 }
@@ -165,7 +163,7 @@ sub main {
             for my $blocked_from(@{$config_data->{blocked_email}}) {
                 next if ! $blocked_from;
                 if ($email_h->{calculated}->{from} eq $blocked_from ) {
-                    $spam{$uid} = 'blocked From';
+                    $spam{$uid} = 'blocked From '.$blocked_from. ';  '.$email_h->{header}->{Subject};
                     $next=1;
                     last;
                 }
@@ -178,13 +176,10 @@ sub main {
             if (exists $config_data->{banned_email_headers}) {
                 for my $key (keys %{$config_data->{banned_email_headers}}) {
                     for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
-                        #say "head: $key -> $item";
-
-                        #my $uid_ar = $imap->search( HEADER => $key => \$imap->Quote($item) ) or warn "search failed: $@\n";
                         next if ! $item;
                         next if not exists $email_h->{header}->{$key};
                         if (index($email_h->{header}->{$key},$item)>-1) {
-                            $spam{$uid} = "banned_header_$key";
+                            $spam{$uid} = "banned_header_$key; $item; ". $email_h->{header}->{Subject};
                             $next=1;
                             last;
                         }
@@ -199,7 +194,7 @@ sub main {
                     last if ! exists $email_h->{body}->{content};
                     last if ! defined $email_h->{body}->{content};
                     if ( $email_h->{body}->{content} =~ /($item)/ ) {
-                        $spam{$uid} = "banned_body_$item = $1";
+                        $spam{$uid} = "banned_body_$item; $1; ".$email_h->{header}->{Subject};
                         $next=1;
                         last;
                     }
@@ -225,7 +220,7 @@ sub main {
             if ($dt > $email_h->{calculated}->{received}) {
             	for my $blocked(@{$config_data->{advertising_three_days}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
-                    $spam{$uid} = 'Ad after 3 days';
+                    $spam{$uid} = 'Ad after 3 days'. '  '.$email_h->{header}->{Subject};
             	}
             }
 
@@ -234,7 +229,7 @@ sub main {
             if ($dt > $email_h->{calculated}->{received}) {
             	for my $blocked(@{$config_data->{advertising_ten_days}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
-                    $spam{$uid} = 'Ad after 10 days';
+                    $spam{$uid} = 'Ad after 10 days'. '  '.$email_h->{header}->{Subject};
             	}
             }
 
@@ -243,7 +238,7 @@ sub main {
             if ($dt > $email_h->{calculated}->{received}) {
             	for my $blocked(@{$config_data->{newsletters}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
-                    $spam{$uid} = 'newsletters  after 30 days';
+                    $spam{$uid} = 'newsletters  after 30 days'. '  '.$email_h->{header}->{Subject};
             	}
             }
 
