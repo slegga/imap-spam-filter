@@ -23,6 +23,7 @@ use DateTime::Format::Mail;
 use Hash::Merge 'merge';
 use Digest::MD5 qw(md5_base64);
 use Clone 'clone';
+use Encode::Guess;
 #use DateTime::Format::RFC3501;
 
 =head1 NAME
@@ -248,7 +249,9 @@ sub main {
         }
         if (keys %spam) {
             for my $uid(keys %spam) {
-                say "$uid moved to spam ".$spam{$uid};
+            	my $decoder = Encode::Guess->guess($spam{$uid});
+            	die $decoder unless ref($decoder);
+                say "$uid moved to spam ". $decoder->decode($spam{$uid});
                 $imap->move('INBOX.Spam',$uid);
             }
         }
