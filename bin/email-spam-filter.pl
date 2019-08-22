@@ -251,7 +251,9 @@ sub main {
             for my $uid(keys %spam) {
             	my $decoder = Encode::Guess->guess($spam{$uid});
             	die $decoder unless ref($decoder);
-                say "$uid moved to spam ". $decoder->decode($spam{$uid});
+                print "$uid moved to spam ";
+                print $spam{$uid} or die ord $spam{$uid};
+                print "\n";
                 $imap->move('INBOX.Spam',$uid);
             }
         }
