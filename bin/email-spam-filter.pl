@@ -24,6 +24,8 @@ use Hash::Merge 'merge';
 use Digest::MD5 qw(md5_base64);
 use Clone 'clone';
 use Encode::Guess;
+
+binmode STDOUT, ':encoding(UTF-8)';
 #use DateTime::Format::RFC3501;
 
 =head1 NAME
