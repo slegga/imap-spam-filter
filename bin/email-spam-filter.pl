@@ -236,7 +236,7 @@ sub main {
             	}
             }
 
-
+            # newsletters
             $dt = time - 30 * 24 *60 *60;
             if ($dt > $email_h->{calculated}->{received}) {
             	for my $blocked(@{$config_data->{newsletters}}) {
@@ -245,10 +245,20 @@ sub main {
             	}
             }
 
+            # remove finn notifiers after 3 days
+            $dt = time - 3 * 24 *60 *60;
+            if ($dt > $email_h->{calculated}->{received}) {
+                for my $adrpart(@{$config_data->{socialmedia}}) {
+                    next if $email_h->{calculated}->{from} !~qr{$adrpart};
+                    $spam{$uid} = 'Remove soical media 3days'. '  '.$email_h->{calculated}->{from};
+            	}
+            }
             # 		#...; #TODO bruk SH::Email::ToHash
     		# 		#...;#todo NetAddr::IP: $me->contains($other)
 
-        }
+
+        } #for uid
+
         if (keys %spam) {
             for my $uid(keys %spam) {
             	my $decoder = Encode::Guess->guess($spam{$uid});
