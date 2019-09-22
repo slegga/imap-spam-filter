@@ -261,8 +261,8 @@ sub main {
 
         if (keys %spam) {
             for my $uid(keys %spam) {
-            	my $decoder = Encode::Guess->guess($spam{$uid});
-            	die $decoder unless ref($decoder);
+#            	my $decoder = Encode::Guess->guess($spam{$uid});
+#            	warn "Problem decoding. Error message: $decoder\n$spam{$uid}\n" unless ref($decoder);
                 print "$uid moved to spam ";
                 print $spam{$uid} or die ord $spam{$uid};
                 print "\n";
