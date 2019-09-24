@@ -24,6 +24,10 @@ use Hash::Merge 'merge';
 use Digest::MD5 qw(md5_base64);
 use Clone 'clone';
 use Encode::Guess;
+use Mojo::SQLite;
+use Mojo::SQLite::Migrations;
+use FindBin;
+use Mojo::File;
 
 binmode STDOUT, ':encoding(UTF-8)';
 #use DateTime::Format::RFC3501;
@@ -51,6 +55,23 @@ sub main {
 
     my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
     my $config_data;
+
+	#
+	#	SETUP database
+	#
+
+	my $sqlite = Mojo::SQLite->new($ENV{HOME} . '/etc/email.db');
+	say $sqlite->db->query('select sqlite_version() as version')->hash->{version};
+	# Use migrations to create a table
+	my @tmp = path($FindBin::Bin)->to_array;
+	pop @tmp;
+	my $project_dir = path(@tmp);
+
+#	$sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
+
+	# Get a database handle from the cache for multiple queries
+	my $db = $sqlite->db;
+
 
     eval {
         open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
@@ -104,19 +125,41 @@ sub main {
     	) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF');
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
+        if(0) {
+            my $folders = $imap->folders
+            or die "$emc: List folders error: ", $imap->LastError, "\n";
+            printf "Folders: %s\n",join("\n",@$folders);
+        }
+		my $convert = SH::Email::ToHash->new(tmpdir => '/tmp/emails');
 
-    	my $folders = $imap->folders
-    	or die "$emc: List folders error: ", $imap->LastError, "\n";
-#    	printf "Folders: %s\n",join("\n",@$folders);
+        # WHITE LIST ALL EMAIL ADDRESS THAT IS WRITTEN TO
+        my @all;
+        if (0)  {
+            my $last_read_sent_epoch=0;
+            my $epoch_key = 'last_read_sent_epoch_'.$config_data->{$emc}->{Server};
+            ($last_read_sent_epoch) = $db->query('select value from variables where key = ?',$epoch_key)->array;
+            $last_read_sent_epoch //=0;
+            my $current_read_sent_epoch=time;
+            my %white_emailaddr = map{$_->{email} => 1} $db->query('select email from whitelist_email_address')->hashes->each;
+            $imap->select( 'INBOX.Sendt' ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
+            @all = $imap->since($last_read_sent_epoch);
+            for my $uid(@all) {
+                my $text = $imap->message_string($uid);
+                my $email_h = $convert->msgtext2hash($text);
+                
+                $email_h->{header}->{From};
+            }
+            $db->query('update variables set value = ? where key = ?',$current_read_sent_epoch,$epoch_key);
+        }
+        # READ INBOX
 
     	$imap->select( 'INBOX' )
     	or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
 
-    	my @all = $imap->search('ALL')
+    	@all = $imap->search('ALL')
     	or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
 
 #        warn join(' ',@all);
-		my $convert = SH::Email::ToHash->new(tmpdir => '/tmp/emails');
         my %keep;
         my %spam;
         my $prev_email_h;
