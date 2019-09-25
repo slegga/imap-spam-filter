@@ -65,9 +65,9 @@ sub main {
     $sqlite = Mojo::SQLite->new($ENV{HOME} . '/etc/email.db');
     say $sqlite->db->query('select sqlite_version() as version')->hash->{version};
     # Use migrations to create a table
-    my @tmp = path($FindBin::Bin)->to_array;
-    pop @tmp;
-    my $project_dir = path(@tmp);
+    my $tmp = path($FindBin::Bin)->to_array;
+    pop @$tmp;
+    my $project_dir = path(@$tmp);
 
     $sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
 
