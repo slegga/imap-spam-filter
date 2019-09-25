@@ -75,7 +75,8 @@ sub main {
     $db = $sqlite->db;
 
     eval {
-        open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
+
+    open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
         $config_data = YAML::Tiny::Load(
             do { local $/; <$FH> }
         );    # slurp content
@@ -144,7 +145,7 @@ sub main {
         #warn "last_read_sent_epoch: $last_read_sent_epoch";
         my $current_read_sent_epoch=time;
         my %white_emailaddr = map{$_->{email} => 1} $db->query('SELECT email FROM whitelist_email_address')->hashes->each;
-        $imap->select( 'INBOX.Sendt' ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
+        $imap->select( $config_data->{$emc}->{Folder_Sent} ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
         @all =grep {$_} $imap->since($last_read_sent_epoch);
         #warn "Antall sent siden sist:".scalar @all;
         for my $uid(@all) {
