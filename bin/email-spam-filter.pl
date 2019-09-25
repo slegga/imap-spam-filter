@@ -60,22 +60,19 @@ sub main {
 	#	SETUP database
 	#
 
-	my $db_enabled=0;
 	my ($sqlite,$db);
 
-	if ($db_enabled) {
-		$sqlite = Mojo::SQLite->new($ENV{HOME} . '/etc/email.db');
-		say $sqlite->db->query('select sqlite_version() as version')->hash->{version};
-		# Use migrations to create a table
-		my @tmp = path($FindBin::Bin)->to_array;
-		pop @tmp;
-		my $project_dir = path(@tmp);
+    $sqlite = Mojo::SQLite->new($ENV{HOME} . '/etc/email.db');
+    say $sqlite->db->query('select sqlite_version() as version')->hash->{version};
+    # Use migrations to create a table
+    my @tmp = path($FindBin::Bin)->to_array;
+    pop @tmp;
+    my $project_dir = path(@tmp);
 
-		$sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
+    $sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
 
-		# Get a database handle from the cache for multiple queries
-		$db = $sqlite->db;
-	}
+    # Get a database handle from the cache for multiple queries
+    $db = $sqlite->db;
 
     eval {
         open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
@@ -137,28 +134,34 @@ sub main {
 
         # WHITE LIST ALL EMAIL ADDRESS THAT IS WRITTEN TO
         my @all;
-        if ($db_enabled)  {
-            my $last_read_sent_epoch=0;
-            my $epoch_key = 'last_epoch_'.$config_data->{$emc}->{Server};
-            ($last_read_sent_epoch) = $db->query('SELECT value FROM variables WHERE key = ?',$epoch_key)->array;
-            $last_read_sent_epoch //=0;
-            my $current_read_sent_epoch=time;
-            my %white_emailaddr = map{$_->{email} => 1} $db->query('SELECT email FROM whitelist_email_address')->hashes->each;
-            $imap->select( 'INBOX.Sendt' ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
-            @all = $imap->since($last_read_sent_epoch);
-            for my $uid(@all) {
-                my $text = $imap->message_string($uid);
-                my $email_h = $convert->msgtext2hash($text);
-                my @emails = map {$convert->extract_emailaddress($_)} split(/[\,]\s*/, $email_h->{header}->{To});
-                for my $e(@emails) {
-                    next if $e !~ /\@/;
-                    $db->query('REPLACE INTO whitelist_email_address(email) VALUES(?)', $e);
-                    $white_emailaddr{$e}=1;
-                }
+        my $last_read_sent_epoch=0;
+        my $epoch_key = 'last_epoch_'.$config_data->{$emc}->{Server};
+        #warn "epoch_key: $epoch_key";
+        my @tmp = $db->query('SELECT value FROM variables WHERE key = ?',$epoch_key)->array;
+        #warn "tmp @tmp";
+        $last_read_sent_epoch = $tmp[0] if @tmp;
+        $last_read_sent_epoch //=0;
+        #warn "last_read_sent_epoch: $last_read_sent_epoch";
+        my $current_read_sent_epoch=time;
+        my %white_emailaddr = map{$_->{email} => 1} $db->query('SELECT email FROM whitelist_email_address')->hashes->each;
+        $imap->select( 'INBOX.Sendt' ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
+        @all =grep {$_} $imap->since($last_read_sent_epoch);
+        #warn "Antall sent siden sist:".scalar @all;
+        for my $uid(@all) {
+            my $text = $imap->message_string($uid);
+            my $email_h = $convert->msgtext2hash($text);
+            my @emails=();
+            if ($email_h->{header}->{To}) {
+                @emails = map {$convert->extract_emailaddress($_)} split(/[\,]\s*/, $email_h->{header}->{To});
             }
-            $db->query('REPLACE INTO variables(key,value)  values(?,?)',$current_read_sent_epoch,$epoch_key);
-            die;
+            for my $e(@emails) {
+                next if $e !~ /\@/;
+                $db->query('REPLACE INTO whitelist_email_address(email) VALUES(?)', $e);
+                $white_emailaddr{$e}=1;
+            }
         }
+        $db->query('REPLACE INTO variables(key,value)  values(?,?)',$epoch_key,$current_read_sent_epoch);
+
         # READ INBOX
 
     	$imap->select( 'INBOX' )
@@ -180,6 +183,7 @@ sub main {
             my $next = 0;
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
+            
             $email_h->{calculated}->{size} = $imap->size($uid);
             $email_h->{uid}=$uid;
 
@@ -222,7 +226,9 @@ sub main {
                 }
             }
             next if $next;
-
+            
+            # whitelist addresses after blacklist of addresses
+            next if exists $white_emailaddr{$email_h->{calculated}->{from}} && $white_emailaddr{$email_h->{calculated}->{from}};
             #TODO: Some whitelisting of email adresses sent to or in address book
             # remove blocked email headers
 
