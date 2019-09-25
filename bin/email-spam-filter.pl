@@ -55,7 +55,7 @@ sub main {
 
     my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
     my $config_data;
-
+    my $epoch = time;
 	#
 	#	SETUP database
 	#
@@ -125,18 +125,17 @@ sub main {
     	) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF');
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
-        if(0) {
-            my $folders = $imap->folders
-            or die "$emc: List folders error: ", $imap->LastError, "\n";
-            printf "Folders: %s\n",join("\n",@$folders);
-        }
-		my $convert = SH::Email::ToHash->new(tmpdir => '/tmp/emails');
+        my $folders = $imap->folders
+        or die "$emc: List folders error: ", $imap->LastError, "\n";
+#            printf "Folders: %s\n",join("\n",@$folders);
+ 
+        my $convert = SH::Email::ToHash->new(tmpdir => '/tmp/emails');
 
         # WHITE LIST ALL EMAIL ADDRESS THAT IS WRITTEN TO
         my @all;
-        if (0)  {
+        if (1)  {
             my $last_read_sent_epoch=0;
-            my $epoch_key = 'last_read_sent_epoch_'.$config_data->{$emc}->{Server};
+            my $epoch_key = 'last_epoch_'.$config_data->{$emc}->{Server};
             ($last_read_sent_epoch) = $db->query('select value from variables where key = ?',$epoch_key)->array;
             $last_read_sent_epoch //=0;
             my $current_read_sent_epoch=time;
@@ -147,9 +146,11 @@ sub main {
                 my $text = $imap->message_string($uid);
                 my $email_h = $convert->msgtext2hash($text);
                 
-                $email_h->{header}->{From};
+                $db->query('REPLACE INTO whitelist_email_address(email) VALUES(?)', $email_h->{header}->{To});
             }
             $db->query('update variables set value = ? where key = ?',$current_read_sent_epoch,$epoch_key);
+            die;
+
         }
         # READ INBOX
 
@@ -158,7 +159,6 @@ sub main {
 
     	@all = $imap->search('ALL')
     	or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
-
 #        warn join(' ',@all);
         my %keep;
         my %spam;
