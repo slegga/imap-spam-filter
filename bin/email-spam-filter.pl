@@ -67,7 +67,7 @@ sub main {
 	pop @tmp;
 	my $project_dir = path(@tmp);
 
-#	$sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
+	$sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
 
 	# Get a database handle from the cache for multiple queries
 	my $db = $sqlite->db;
@@ -133,24 +133,27 @@ sub main {
 
         # WHITE LIST ALL EMAIL ADDRESS THAT IS WRITTEN TO
         my @all;
-        if (1)  {
+        if (0)  {
             my $last_read_sent_epoch=0;
             my $epoch_key = 'last_epoch_'.$config_data->{$emc}->{Server};
-            ($last_read_sent_epoch) = $db->query('select value from variables where key = ?',$epoch_key)->array;
+            ($last_read_sent_epoch) = $db->query('SELECT value FROM variables WHERE key = ?',$epoch_key)->array;
             $last_read_sent_epoch //=0;
             my $current_read_sent_epoch=time;
-            my %white_emailaddr = map{$_->{email} => 1} $db->query('select email from whitelist_email_address')->hashes->each;
+            my %white_emailaddr = map{$_->{email} => 1} $db->query('SELECT email FROM whitelist_email_address')->hashes->each;
             $imap->select( 'INBOX.Sendt' ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
             @all = $imap->since($last_read_sent_epoch);
             for my $uid(@all) {
                 my $text = $imap->message_string($uid);
                 my $email_h = $convert->msgtext2hash($text);
-                
-                $db->query('REPLACE INTO whitelist_email_address(email) VALUES(?)', $email_h->{header}->{To});
+                my @emails = map {$convert->extract_emailaddress($_)} split(/[\,]\s*/, $email_h->{header}->{To});
+                for my $e(@emails) {
+                    next if $e !~ /\@/;
+                    $db->query('REPLACE INTO whitelist_email_address(email) VALUES(?)', $e);
+                    $white_emailaddr{$e}=>1;
+                }
             }
-            $db->query('update variables set value = ? where key = ?',$current_read_sent_epoch,$epoch_key);
+            $db->query('REPLACE INTO variables(key,value)  values(?,?)',$current_read_sent_epoch,$epoch_key);
             die;
-
         }
         # READ INBOX
 
