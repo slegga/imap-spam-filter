@@ -248,19 +248,7 @@ sub main {
             }
 
             next if $next;
-            if (exists $config_data->{banned_body_regexp}) {
-                for my $item (@{$config_data->{banned_body_regexp}}) {
-                    next if ! $item;
-                    last if ! exists $email_h->{body}->{content};
-                    last if ! defined $email_h->{body}->{content};
-                    if ( $email_h->{body}->{content} =~ /($item)/ ) {
-                        $spam{$uid} = "banned_body_$item; $1; ".$email_h->{header}->{Subject};
-                        $next=1;
-                        last;
-                    }
-                }
-            }
-            next if $next;
+            
 
             # delay remove of ads only on dates not datetimes
         	my $dt = time - 36 *60 *60;
@@ -281,8 +269,10 @@ sub main {
             	for my $blocked(@{$config_data->{advertising_three_days}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
                     $spam{$uid} = 'Ad after 3 days'. '  '.$email_h->{header}->{Subject};
+                    $next = 1;
             	}
             }
+            next if $next;
 
         	# delay remove of info emails
             $dt = time - 9 * 24 *60 *60;
@@ -290,8 +280,10 @@ sub main {
             	for my $blocked(@{$config_data->{advertising_ten_days}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
                     $spam{$uid} = 'Ad after 10 days'. '  '.$email_h->{header}->{Subject};
+                    $next = 1;
             	}
             }
+            next if $next;
 
             # newsletters
             $dt = time - 30 * 24 *60 *60;
@@ -299,8 +291,10 @@ sub main {
             	for my $blocked(@{$config_data->{newsletters}}) {
                     next if $blocked ne $email_h->{calculated}->{from};
                     $spam{$uid} = 'newsletters  after 30 days'. '  '.$email_h->{header}->{Subject};
+                    $next = 1;
             	}
             }
+            next if $next;
 
             # remove finn notifiers after 3 days
             $dt = time - 3 * 24 *60 *60;
@@ -308,10 +302,41 @@ sub main {
                 for my $adrpart(@{$config_data->{socialmedia}}) {
                     next if $email_h->{calculated}->{from} !~qr{$adrpart};
                     $spam{$uid} = 'Remove soical media 3days'. '  '.$email_h->{calculated}->{from};
+                    $next = 1;
+
             	}
             }
-            # 		#...; #TODO bruk SH::Email::ToHash
-    		# 		#...;#todo NetAddr::IP: $me->contains($other)
+            next if $next;
+
+            # whitelist regexp in body
+            if (exists $config_data->{keep_body_regexp}) {
+                for my $item (@{$config_data->{keep_body_regexp}}) {
+                    next if ! $item;
+                    last if ! exists $email_h->{body}->{content};
+                    last if ! defined $email_h->{body}->{content};
+                    if ( $email_h->{body}->{content} =~ /($item)/ ) {
+                        $next=1;
+                        last;
+                    }
+                }
+            }
+            next if $next;
+            
+            # regexp in body phrase in 
+            if (exists $config_data->{banned_body_regexp}) {
+                for my $item (@{$config_data->{banned_body_regexp}}) {
+                    next if ! $item;
+                    last if ! exists $email_h->{body}->{content};
+                    last if ! defined $email_h->{body}->{content};
+                    if ( $email_h->{body}->{content} =~ /($item)/ ) {
+                        $spam{$uid} = "banned_body_$item; $1; ".$email_h->{header}->{Subject};
+                        $next=1;
+                        last;
+                    }
+                }
+            }
+            next if $next;
+            
 
 
         } #for uid
