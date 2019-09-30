@@ -19,5 +19,5 @@ for my $script (glob('script/*'),glob('bin/*')) { #$FindBin::Bin . '/../
     my $b = path($0)->basename;
     $t->stdout_like(qr/$b/);
 }
-
+ok(1,'Dummy'); # dummy testing in case no scripts
 done_testing;
