@@ -315,7 +315,7 @@ sub main {
                     last if ! exists $email_h->{body}->{content};
                     last if ! defined $email_h->{body}->{content};
                     if ( $email_h->{body}->{content} =~ /($item)/ ) {
-                    	print "whitelist: ". $item.' # '. $1 if $self->verbose ||$self->debug;
+                    	say "whitelist: ". $item.' # "'. $1.'"' if $self->verbose ||$self->debug;
                         $next=1;
                         last;
                     }
