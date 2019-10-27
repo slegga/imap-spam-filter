@@ -184,7 +184,7 @@ sub main {
             my $next = 0;
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
-            
+
             $email_h->{calculated}->{size} = $imap->size($uid);
             $email_h->{uid}=$uid;
 
@@ -227,7 +227,7 @@ sub main {
                 }
             }
             next if $next;
-            
+
             # whitelist addresses after blacklist of addresses
             next if exists $white_emailaddr{$email_h->{calculated}->{from}} && $white_emailaddr{$email_h->{calculated}->{from}};
             #TODO: Some whitelisting of email adresses sent to or in address book
@@ -248,7 +248,7 @@ sub main {
             }
 
             next if $next;
-            
+
 
             # delay remove of ads only on dates not datetimes
         	my $dt = time - 36 *60 *60;
@@ -315,14 +315,15 @@ sub main {
                     last if ! exists $email_h->{body}->{content};
                     last if ! defined $email_h->{body}->{content};
                     if ( $email_h->{body}->{content} =~ /($item)/ ) {
+                    	print "whitelist: ". $item.' # '. $email_h->{body}->{content} if $self->verbose ||$self->debug;
                         $next=1;
                         last;
                     }
                 }
             }
             next if $next;
-            
-            # regexp in body phrase in 
+
+            # regexp in body phrase in
             if (exists $config_data->{banned_body_regexp}) {
                 for my $item (@{$config_data->{banned_body_regexp}}) {
                     next if ! $item;
@@ -336,7 +337,7 @@ sub main {
                 }
             }
             next if $next;
-            
+
 
 
         } #for uid
