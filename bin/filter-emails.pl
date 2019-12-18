@@ -46,7 +46,7 @@ option 'info!',    'Show info';
 
  sub main {
     my $self = shift;
-    my ($command,@e) = $self->extra_options;
+    my ($command,@e) = @{ $self->extra_options };
     my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
     my $config_data;
 
