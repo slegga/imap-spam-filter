@@ -342,7 +342,7 @@ sub main {
 
    			# move to user folder if sender is
    			if (exists $config_data->{userfolder_from_email_address}) {
-				for my $userfolder (@{$config_data->{userfolder_from_email_address}}) {
+				for my $userfolder (keys %{$config_data->{userfolder_from_email_address}}) {
 				 	next if ! $userfolder;
 					for my $emailsender(@{ $config_data->{userfolder_from_email_address}->{$userfolder} }) {
 						next if ! $emailsender;
