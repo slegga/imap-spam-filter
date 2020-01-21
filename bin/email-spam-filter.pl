@@ -173,6 +173,7 @@ sub main {
 #        warn join(' ',@all);
         my %keep;
         my %spam;
+        my %userfolders;
         my $prev_email_h;
         my $t = localtime;
        my $curr_week = $t->week;
@@ -338,7 +339,21 @@ sub main {
             }
             next if $next;
 
-
+			# move to user folder if sender is
+			if (exists $config_data->{userfolder_from_email_address}) {
+                for my $userfolder (@{$config_data->{userfolder_from_email_address}}) {
+                 	next if ! $userfolder;
+                	for my $emailsender(@{ $config_data->{userfolder_from_email_address}->{$userfolder} }) {
+                		next if ! $emailsender;
+                    if ( $email_h->{body}->{From} eq /$emailsender/ ) {
+                        $userfolder->{$userfolder}{$uid} = "move_to_$userfolder; ".$email_h->{header}->{Subject};
+                        $next=1;
+                        last;
+                    }
+                }
+            }
+            next if $next;
+			
 
         } #for uid
 
@@ -354,6 +369,17 @@ sub main {
         }
 
 
+        if (keys %userfolders) {
+            for my $folder(keys %userfolders) {
+            	for my $uid(keys %{$userfolders{$folder} }) {
+	                print "$uid moved to $folder";
+	                print ${$uid} or die ord $spam{$uid};
+	                print "\n";
+	                $imap->move('INBOX.'.$folder,$uid);
+	            }
+            }
+        }
+
     	#SH::PrettyPrint::print_hashes \@hashes;
 
     	# TODO: Only keep 1 or x of emails from this sender.
@@ -363,7 +389,7 @@ sub main {
     	    or die "Logout error: ", $imap->LastError, "\n";
     }
 
-
+}
 }
 
 __PACKAGE__->new->main;
