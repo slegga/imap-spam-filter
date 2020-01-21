@@ -343,15 +343,14 @@ sub main {
             $dt = time - 9 * 24 *60 *60;
 
    			# move to user folder if sender is X and email is older than 9 days
-   			if (exists $config_data->{userfolder_from_email_address}) {
+   			if (exists $config_data->{userfolder_from_email_address} && $config_data->{userfolder_from_email_address} && $dt > $email_h->{calculated}->{received}) {
 				for my $userfolder (keys %{$config_data->{userfolder_from_email_address}}) {
 				 	next if ! $userfolder;
 					for my $emailsender(@{ $config_data->{userfolder_from_email_address}->{$userfolder} }) {
 						next if ! $emailsender;
-						next if ($dt > $email_h->{calculated}->{received}) ;
 						
 					   if ( $email_h->{header}->{From} eq $emailsender ) {
-					       $config_data->{userfolder_from_email_address}->{$userfolder}->{$uid} = "move_to_$userfolder; ".$email_h->{header}->{Subject};
+					       $userfolders{$userfolder}{$uid} = "move_to_$userfolder; ".$email_h->{header}->{Subject};
 					       $next=1;
 					       last;
 					   }
@@ -361,15 +360,14 @@ sub main {
             next if $next;
 
    			# move to user folder if regexp is and email is older than 9 days
-   			if (exists $config_data->{userfolder_subject_regexp}) {
+   			if (exists $config_data->{userfolder_subject_regexp} && $dt > $email_h->{calculated}->{received}) {
 				for my $userfolder (keys %{$config_data->{userfolder_subject_regexp}}) {
 				 	next if ! $userfolder;
 					for my $regexp(@{ $config_data->{userfolder_subject_regexp}->{$userfolder} }) {
 						next if ! $regexp;
-						next if ($dt > $email_h->{calculated}->{received}) ;
 						
 					   if ( $email_h->{header}->{Subject} =~ /($regexp)/ ) {
-					       $config_data->{userfolder_from_email_address}->{$userfolder}->{$uid} = "move_to_$userfolder regexp_sub;$regexp;$1; ".$email_h->{header}->{Subject};
+					       $userfolders{$userfolder}{$uid} = "move_to_$userfolder regexp_sub;$regexp;$1; ".$email_h->{header}->{Subject}."   $dt > $email_h->{calculated}->{received}";
 					       $next=1;
 					       last;
 					   }
@@ -396,7 +394,7 @@ sub main {
             for my $folder(keys %userfolders) {
             	for my $uid(keys %{$userfolders{$folder} }) {
 	                print "$uid moved to $folder";
-	                print ${$uid} or die ord $spam{$uid};
+	                print $userfolders{$folder}{$uid} or die ord $userfolders{$folder}{$uid};
 	                print "\n";
 	                $imap->move('INBOX.'.$folder,$uid);
 	            }
