@@ -348,7 +348,7 @@ sub main {
 						next if ! $emailsender;
 						next if ($dt > $email_h->{calculated}->{received}) ;
 						
-					   if ( $email_h->{header}->{From} eq /$emailsender/ ) {
+					   if ( $email_h->{header}->{From} eq $emailsender ) {
 					       $config_data->{userfolder_from_email_address}->{$userfolder}->{$uid} = "move_to_$userfolder; ".$email_h->{header}->{Subject};
 					       $next=1;
 					       last;
