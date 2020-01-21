@@ -339,8 +339,8 @@ sub main {
             }
             next if $next;
 
-			# move to user folder if sender is
-			if (exists $config_data->{userfolder_from_email_address}) {
+      			# move to user folder if sender is
+      			if (exists $config_data->{userfolder_from_email_address}) {
                 for my $userfolder (@{$config_data->{userfolder_from_email_address}}) {
                  	next if ! $userfolder;
                 	for my $emailsender(@{ $config_data->{userfolder_from_email_address}->{$userfolder} }) {
@@ -351,9 +351,10 @@ sub main {
                         last;
                     }
                 }
+              }
             }
             next if $next;
-			
+
 
         } #for uid
 
@@ -389,7 +390,6 @@ sub main {
     	    or die "Logout error: ", $imap->LastError, "\n";
     }
 
-}
 }
 
 __PACKAGE__->new->main;
