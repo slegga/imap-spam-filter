@@ -112,6 +112,7 @@ sub main {
     	next if $emc eq 'advertising_three_days';
     	next if $emc eq 'blocked_email';
     	next if $emc eq 'advertising_ten_days';
+    	next if $emc eq 'userfolder_from_email_address';
         if  ($self->server) {
             my $s = $self->server;
             next if $emc!~/$s/;
