@@ -113,6 +113,7 @@ sub main {
     	next if $emc eq 'blocked_email';
     	next if $emc eq 'advertising_ten_days';
     	next if $emc eq 'userfolder_from_email_address';
+    	next if $emc eq 'userfolder_subject_regexp';
         if  ($self->server) {
             my $s = $self->server;
             next if $emc!~/$s/;
@@ -339,9 +340,9 @@ sub main {
                 }
             }
             next if $next;
-            $dt = time - 10 * 24 *60 *60;
+            $dt = time - 9 * 24 *60 *60;
 
-   			# move to user folder if sender is
+   			# move to user folder if sender is X and email is older than 9 days
    			if (exists $config_data->{userfolder_from_email_address}) {
 				for my $userfolder (keys %{$config_data->{userfolder_from_email_address}}) {
 				 	next if ! $userfolder;
@@ -359,6 +360,23 @@ sub main {
             }
             next if $next;
 
+   			# move to user folder if regexp is and email is older than 9 days
+   			if (exists $config_data->{userfolder_subject_regexp}) {
+				for my $userfolder (keys %{$config_data->{userfolder_subject_regexp}}) {
+				 	next if ! $userfolder;
+					for my $regexp(@{ $config_data->{userfolder_subject_regexp}->{$userfolder} }) {
+						next if ! $regexp;
+						next if ($dt > $email_h->{calculated}->{received}) ;
+						
+					   if ( $email_h->{header}->{Subject} =~ /($regexp)/ ) {
+					       $config_data->{userfolder_from_email_address}->{$userfolder}->{$uid} = "move_to_$userfolder regexp_sub;$regexp;$1; ".$email_h->{header}->{Subject};
+					       $next=1;
+					       last;
+					   }
+					}
+				 }
+            }
+            next if $next;
 
         } #for uid
 
