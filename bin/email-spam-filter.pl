@@ -348,8 +348,8 @@ sub main {
 				 	next if ! $userfolder;
 					for my $emailsender(@{ $config_data->{userfolder_from_email_address}->{$userfolder} }) {
 						next if ! $emailsender;
-						
-					   if ( $email_h->{header}->{From} eq $emailsender ) {
+
+					   if ( $email_h->{header}->{From} =~ /$emailsender/ ) {
 					       $userfolders{$userfolder}{$uid} = "move_to_$userfolder; ".$email_h->{header}->{Subject};
 					       $next=1;
 					       last;
@@ -365,7 +365,7 @@ sub main {
 				 	next if ! $userfolder;
 					for my $regexp(@{ $config_data->{userfolder_subject_regexp}->{$userfolder} }) {
 						next if ! $regexp;
-						
+
 					   if ( $email_h->{header}->{Subject} =~ /($regexp)/ ) {
 					       $userfolders{$userfolder}{$uid} = "move_to_$userfolder regexp_sub;$regexp;$1; ".$email_h->{header}->{Subject}."   $dt > $email_h->{calculated}->{received}";
 					       $next=1;
