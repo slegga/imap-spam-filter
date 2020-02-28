@@ -126,7 +126,7 @@ sub main {
     	Uid      => $config_data->{$emc}->{Uid},
     	Debug    => $config_data->{$emc}->{Debug},
     	Peek     => 1,
-    	) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF');
+    	) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
         my $folders = $imap->folders
