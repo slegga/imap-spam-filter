@@ -42,6 +42,7 @@ imap-spam-filter.pl
 has home => sub { path($0)->sibling('..') };
 option 'verbose!', 'Turn on verbose output';
 option 'debug!', 'Turn on debug output';
+option 'regexp=s', 'Regexp on email. Mainly for debugging purposes';
 option 'info!',  'Print out config data. And exit';
 option 'server=s', 'regexp på server name, for running only one or few not all';
 
@@ -186,6 +187,9 @@ sub main {
         for my $uid(@all) {
             my $next = 0;
             my $text = $imap->message_string($uid);
+            if (my $re = $self->regexp) {
+                next if !$text =~ /$re/;
+            }
             my $email_h = $convert->msgtext2hash($text);
 
             $email_h->{calculated}->{size} = $imap->size($uid);
