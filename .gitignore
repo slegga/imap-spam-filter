@@ -36,4 +36,4 @@ inc/
 *.ERR
 *.LOG
 *.tdy
-
+.prove

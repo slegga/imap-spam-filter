@@ -16,7 +16,7 @@ for my $script (glob('script/*'),glob('bin/*')) { #$FindBin::Bin . '/../
     my $t = Test::ScriptX->new($script);
     $t->run(help => 1);
     $t->stderr_ok;
-    my $b = path($0)->basename;
+    my $b = $scr_obj->basename;
     $t->stdout_like(qr/$b/);
 }
 ok(1,'Dummy'); # dummy testing in case no scripts
