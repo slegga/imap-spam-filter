@@ -28,6 +28,7 @@ use Mojo::SQLite;
 use Mojo::SQLite::Migrations;
 use FindBin;
 use Mojo::File;
+no warnings qw(experimental::signatures);
 
 binmode STDOUT, ':encoding(UTF-8)';
 binmode STDIN, ':encoding(UTF-8)';
@@ -47,6 +48,24 @@ option 'debug!', 'Turn on debug output';
 option 'regexp=s', 'Regexp on email. Mainly for debugging purposes';
 option 'info!',  'Print out config data. And exit';
 option 'server=s', 'regexp på server name, for running only one or few not all';
+
+
+# calculate rule order for sort. Return a value for sorting
+sub orderval {
+    my  ($self, $rule_hr) = @_;
+    my $return  = $rule_hr->{expiration_days} * 10000;
+    $return -= 10 if exists $rule_hr->{whitelist};
+    if (exists $rule_hr->{move_to}) {
+        $return += 10;
+        if ($rule_hr->{move_to} =~ /spam/i) {
+            $return += 1;
+        }
+    }
+    for my $crit (@{ $rule_hr->{criteria} }) {
+        $return += 1 if grep {$_ =~/\_(contain|in|like)$/} keys %$crit;
+    }
+    return  $return;
+}
 
 sub main {
 
@@ -257,7 +276,7 @@ say Dumper \%connect;
 
 #print   map{"$_ . $config_data->{$_}\n"}  keys %$config_data;
 #die;
-            for my $rule( sort{$config_data->{$a}->{expiration_days} <=> $config_data->{$b}->{expiration_days}}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data) {
+            for my $rule( sort{$self->orderval($config_data->{$a}) <=> $self->orderval($config_data->{$a})}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data) {
                 next if $rule eq 'connection';
                 last if $next==1;
                 my $dt = time - $config_data->{$rule}->{expiration_days} * 24 *60 *60;
