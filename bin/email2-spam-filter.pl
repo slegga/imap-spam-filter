@@ -93,11 +93,22 @@ sub main {
 	        eval {
 	            open my $fh, '< :encoding(UTF-8)', "$file" or die "Failed to read $file: $!";
 	            my $tmp = YAML::Tiny::Load( do { local $/; <$fh> } );
-	            if (exists $config_data->{$name}) {
-		            $config_data->{$name} = merge( $config_data->{$name}, $tmp);
-		        } else {
-		        	$config_data->{$name} = $tmp;
-		        }
+                $config_data->{blocked} = {expiration_days=>0,move_to=>'INBOX.Spam',criteria=>[]} if ! exists $config_data->{blocked};
+                #say ref($tmp) ."   $name";
+                #say Dump $tmp;
+                if ($name eq 'banned_email_headers') {
+                    for my $h3 (keys %$tmp ) {
+                        for my $h4(@{ $tmp->{$h3} }) {
+                            push @{ $config_data->{blocked}->{criteria},  }, {$h3."_contain" => $h4};
+                        }
+                    }
+                }
+                elsif($name eq 'banned_ip_slices') {
+                    for my $h2 (@$tmp) {
+                        push @{ $config_data->{blocked}->{criteria},  }, {ip_address_in => $h2};
+                    }
+                } else {die "Unknown name $name"}
+                1;
 	        } or do {
 	            confess $@;
 	        };
@@ -115,27 +126,29 @@ sub main {
             my $s = $self->server;
             next if $emc!~/$s/;
         }
-    	my $imap = Mail::IMAPClient->new(
-    	Server   => $config_data->{$emc}->{Server},
-    	User     => $config_data->{$emc}->{Username},
-    	Password => $config_data->{$emc}->{Password},
-    	Ssl      => $config_data->{$emc}->{Ssl},
-    	Uid      => $config_data->{$emc}->{Uid},
-    	Debug    => $config_data->{$emc}->{Debug},
-    	Peek     => 1,
-    	) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
+        my %connect =(    	Server   => $config_data->{connection}->{$emc}->{Server},
+    	User     => $config_data->{connection}->{$emc}->{Username},
+    	Password => $config_data->{connection}->{$emc}->{Password},
+    	Ssl      => $config_data->{connection}->{$emc}->{Ssl},
+    	Uid      => $config_data->{connection}->{$emc}->{Uid},
+    	Debug    => $config_data->{connection}->{$emc}->{Debug},
+    	Peek     => 1,);
+
+say Dumper \%connect;
+    	my $imap = Mail::IMAPClient->new(%connect) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
+#    	$imap->connect or die "Could not connect: $@\n";
         my $folders = $imap->folders
-        or die "$emc: List folders error: ", $imap->LastError, "\n";
-#            printf "Folders: %s\n",join("\n",@$folders);
+        or die "$emc: List folders error: ", $imap->LastError, "\n". Dumper \%connect;;
+#        printf "Folders: %s\n",join("\n",@$folders);
 
         my $convert = SH::Email::ToHash->new(tmpdir => '/tmp/emails');
 
         # WHITE LIST ALL EMAIL ADDRESS THAT IS WRITTEN TO
         my @all;
         my $last_read_sent_epoch=0;
-        my $epoch_key = 'last_epoch_'.$config_data->{$emc}->{Server};
+        my $epoch_key = 'last_epoch_'.$config_data->{connection}->{$emc}->{Server};
         #warn "epoch_key: $epoch_key";
         my @tmp = $db->query('SELECT value FROM variables WHERE key = ?',$epoch_key)->array;
         #warn "tmp @tmp";
@@ -144,9 +157,11 @@ sub main {
         #warn "last_read_sent_epoch: $last_read_sent_epoch";
         my $current_read_sent_epoch=time;
         my %white_emailaddr = map{$_->{email} => 1} $db->query('SELECT email FROM whitelist_email_address')->hashes->each;
-        $imap->select( $config_data->{$emc}->{Folder_Sent} ) or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
+        say $config_data->{connection}->{$emc}->{Folder_Sent} ;
+        $imap->select( $config_data->{connection}->{$emc}->{Folder_Sent} ) or die "$emc: Select '".($config_data->{connection}->{$emc}->{Folder_Sent}//'__UNDEF__')."' error: ", $imap->LastError, "\n";
         @all =grep {$_} $imap->since($last_read_sent_epoch);
-        #warn "Antall sent siden sist:".scalar @all;
+        warn "Antall sent siden sist:".scalar @all;
+
         for my $uid(@all) {
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
@@ -171,15 +186,18 @@ sub main {
     	or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
 #        warn join(' ',@all);
         my %keep;
-        my %spam;
+        my %action;
         my %userfolders;
         my $prev_email_h;
         my $t = localtime;
        my $curr_week = $t->week;
        my $curr_year = $t->year;
 
-        my $weekword = $config_data->{$emc}->{weekword}|| 'uke';
-        my $prefix =   $config_data->{$emc}->{weekword}|| 'Melding fra ';
+        my $weekword = $config_data->{connection}->{$emc}->{weekword}|| 'uke';
+        my $prefix =   $config_data->{connection}->{$emc}->{weekword}|| 'Melding fra ';
+
+        #MAIN LOOP
+
         for my $uid(@all) {
             my $next = 0;
             my $text = $imap->message_string($uid);
@@ -201,7 +219,7 @@ sub main {
                 && $prev_email_h->{header}->{'Return-Path'}     eq $email_h->{header}->{'Return-Path'}  ) {
                     my $move_uid;
                     $move_uid = $prev_email_h->{calculated}->{size} > $email_h->{calculated}->{size} ? $email_h->{uid} : $prev_email_h->{uid};
-                    $spam{$move_uid} = "MOVE DUPLICATE ". $move_uid. '; '.$prev_email_h->{header}->{Subject};
+                    $action{$move_uid} = {rule=>"MOVE DUPLICATE ", action =>'move_to',folder=>'spam', email_name=>$prev_email_h->{header}->{Subject} };
                 }
 
                 #remove old weeks
@@ -213,7 +231,7 @@ sub main {
                        # Try to handle new year
                        $week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
                        if ($week_diff >0 && $week_diff < 5) {
-                           $spam{$email_h->{uid}} = "MOVE PASSED WEEK ". $email_h->{uid} . ' Subject: '. $email_h->{Subject};
+                           $action{$email_h->{uid}} ={ rule=>"MOVE PASSED WEEK ",  email_name => $email_h->{Subject}};
                        }
                    }
                 }
@@ -221,40 +239,7 @@ sub main {
             $prev_email_h = clone $email_h;
 
             $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From}) or next;
-            for my $blocked_from(@{$config_data->{blocked_email}}) {
-                next if ! $blocked_from;
-                if ($email_h->{calculated}->{from} eq $blocked_from ) {
-                    $spam{$uid} = 'blocked From '.$blocked_from. ';  '.$email_h->{header}->{Subject};
-                    $next=1;
-                    last;
-                }
-            }
-            next if $next;
-
-            # whitelist addresses after blacklist of addresses
-            next if exists $white_emailaddr{$email_h->{calculated}->{from}} && $white_emailaddr{$email_h->{calculated}->{from}};
-            #TODO: Some whitelisting of email adresses sent to or in address book
-            # remove blocked email headers
-
-            if (exists $config_data->{banned_email_headers}) {
-                for my $key (keys %{$config_data->{banned_email_headers}}) {
-                    for my $item (@{$config_data->{banned_email_headers}->{$key}}) {
-                        next if ! $item;
-                        next if not exists $email_h->{header}->{$key};
-                        if (index($email_h->{header}->{$key},$item)>-1) {
-                            $spam{$uid} = "banned_header_$key; $item; ". $email_h->{header}->{Subject};
-                            $next=1;
-                            last;
-                        }
-                    }
-                }
-            }
-
-            next if $next;
-
-
             # delay remove of ads only on dates not datetimes
-        	my $dt = time - 36 *60 *60;
             my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1];
 #            warn $res;
             $res =~s/^[\W]+//;
@@ -268,138 +253,104 @@ sub main {
                 die $@;
             }
             die "Can not get Received date " .Dumper $email_h->{header}->{Received} if !$res;
-            if ($dt > $email_h->{calculated}->{received}) {
-            	for my $blocked(@{$config_data->{advertising_three_days}}) {
-                    next if $blocked ne $email_h->{calculated}->{from};
-                    $spam{$uid} = 'Ad after 3 days'. '  '.$email_h->{header}->{Subject};
-                    $next = 1;
-            	}
-            }
-            next if $next;
 
-        	# delay remove of info emails
-            $dt = time - 9 * 24 *60 *60;
-            if ($dt > $email_h->{calculated}->{received}) {
-            	for my $blocked(@{$config_data->{advertising_ten_days}}) {
-                    next if $blocked ne $email_h->{calculated}->{from};
-                    $spam{$uid} = 'Ad after 10 days'. '  '.$email_h->{header}->{Subject};
-                    $next = 1;
-            	}
-            }
-            next if $next;
 
-            # newsletters
-            $dt = time - 30 * 24 *60 *60;
-            if ($dt > $email_h->{calculated}->{received}) {
-            	for my $blocked(@{$config_data->{newsletters}}) {
-                    next if $blocked ne $email_h->{calculated}->{from};
-                    $spam{$uid} = 'newsletters  after 30 days'. '  '.$email_h->{header}->{Subject};
-                    $next = 1;
-            	}
-            }
-            next if $next;
+#print   map{"$_ . $config_data->{$_}\n"}  keys %$config_data;
+#die;
+            for my $rule( sort{$config_data->{$a}->{expiration_days} <=> $config_data->{$b}->{expiration_days}}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data) {
+                next if $rule eq 'connection';
+                last if $next==1;
+                my $dt = time - $config_data->{$rule}->{expiration_days} * 24 *60 *60;
+                next if ($dt < $email_h->{calculated}->{received});
+                for my $crit (@{ $config_data->{$rule}->{criteria} }) {
+                    my $hit = 0;
+                    for my $v(keys %$crit) {
+                        if ($v eq 'from_is') {
+                            if ($email_h->{calculated}->{from} eq $crit->{$v}) {
+                                $action{$uid}{reason} .= $v;
+                                $hit=1;
+                            } else { last }
+                        } elsif ($v eq 'body_like') {
+                            my $qr = qr/($crit->{$v})/;
+                            next if ! exists $email_h->{body}->{content};
+                            next if ! $email_h->{body}->{content};
+                            if ($email_h->{body}->{content} =~ /$qr/) {
+                                $action{$uid}{reason} .= $v.' '. $1. "=~". $qr;
+                                $hit=1;
+                            } else { last }
+                        } elsif ($v eq 'subject_like') {
+                            my $qr = qr/($crit->{$v})/;
+                          
+                            if ($email_h->{header}->{Subject} =~ /$qr/) {
+                                $action{$uid}{reason} .= $v.' '. $1;
+                                $hit=1;
+                            } else { last }
+                        } elsif ($v eq 'subject_like') {
+                            my $qr = qr/($crit->{$v})/;
+                          
+                            if ($email_h->{header}->{Subject} =~ /$qr/) {
+                                $action{$uid}{reason} .= $v.' '. $1;
+                                $hit=1;
+                            } else { last }
+                        } elsif ($v =~ /(.+)_contain$/) {
+                            my $header= $1;
+                            my $part = $crit->{$v};
+                            next if !exists $email_h->{header}->{$header};
+                            next if ! $email_h->{header}->{$header};
+                            if (index($email_h->{header}->{$header},$part)>-1) {
+                                $action{$uid}{reason} .= $v.' '.'$header like' .$part;
+                                $hit=1;
+                            } else { last }
+                        } elsif ($v eq 'ip_address_in') {
+                            my $slice = $crit->{$v};
+                            my $ip = $email_h->{header}->{'X-XClient-IP-Addr'};
+                            if (
+                            NetAddr::IP->new($ip)->within(NetAddr::IP->new($slice)) ) {
+                                $action{$uid}{reason} .= join(' ',$v,$ip,'part of',$slice);
+                                $hit=1;
+                            } else { last }
+                        } else {
+                            die "Unsupported keyword $v at $rule ".Dump $crit;
+                        }
+                    }
+                    if ($hit) {
+                        if (exists $config_data->{$rule}->{whitelist}) {
+                            delete $action{$uid};
+                        }
+                        elsif (exists $config_data->{$rule}->{move_to}) {
+                            $action{$uid}{rule}  = $rule;
+                            $action{$uid}{action}='move_to';
+                            $action{$uid}{folder}= $config_data->{$rule}->{move_to};
+                            $action{$uid}{email_name}=$email_h->{header}->{Subject};
+                        } else {
+                            warn "$_ = ".$config_data->{$rule}->{$_} for  grep{$_ ne 'criteria'} keys %{$config_data->{$rule}};
+                            die "Do not what to do $rule";
+                        }
 
-            # remove finn notifiers after 3 days
-            $dt = time - 3 * 24 *60 *60;
-            if ($dt > $email_h->{calculated}->{received}) {
-                for my $adrpart(@{$config_data->{socialmedia}}) {
-                    next if $email_h->{calculated}->{from} !~qr{$adrpart};
-                    $spam{$uid} = 'Remove soical media 3days'. '  '.$email_h->{calculated}->{from};
-                    $next = 1;
-
-            	}
-            }
-            next if $next;
-
-            # whitelist regexp in body
-            if (exists $config_data->{keep_body_regexp}) {
-                for my $item (@{$config_data->{keep_body_regexp}}) {
-                    next if ! $item;
-                    last if ! exists $email_h->{body}->{content};
-                    last if ! defined $email_h->{body}->{content};
-                    if ( $email_h->{body}->{content} =~ /($item)/ ) {
-                    	say "whitelist: ". $item.' # "'. $1.'"' if $self->verbose ||$self->debug;
                         $next=1;
                         last;
+
                     }
                 }
             }
-            next if $next;
-
-            # regexp in body phrase in
-            if (exists $config_data->{banned_body_regexp}) {
-                for my $item (@{$config_data->{banned_body_regexp}}) {
-                    next if ! $item;
-                    last if ! exists $email_h->{body}->{content};
-                    last if ! defined $email_h->{body}->{content};
-                    if ( $email_h->{body}->{content} =~ /($item)/ ) {
-                        $spam{$uid} = "banned_body_$item; $1; ".$email_h->{header}->{Subject};
-                        $next=1;
-                        last;
-                    }
-                }
-            }
-            next if $next;
-            $dt = time - 9 * 24 *60 *60;
-
-   			# move to user folder if sender is X and email is older than 9 days
-   			if (exists $config_data->{userfolder_from_email_address} && $config_data->{userfolder_from_email_address} && $dt > $email_h->{calculated}->{received}) {
-				for my $userfolder (keys %{$config_data->{userfolder_from_email_address}}) {
-				 	next if ! $userfolder;
-					for my $emailsender(@{ $config_data->{userfolder_from_email_address}->{$userfolder} }) {
-						next if ! $emailsender;
-
-					   if ( $email_h->{header}->{From} =~ /$emailsender/ ) {
-					       $userfolders{$userfolder}{$uid} = "move_to_$userfolder; ".$email_h->{header}->{Subject};
-					       $next=1;
-					       last;
-					   }
-					}
-				 }
-            }
-            next if $next;
-
-   			# move to user folder if regexp is and email is older than 9 days
-   			if (exists $config_data->{userfolder_subject_regexp} && $dt > $email_h->{calculated}->{received}) {
-				for my $userfolder (keys %{$config_data->{userfolder_subject_regexp}}) {
-				 	next if ! $userfolder;
-					for my $regexp(@{ $config_data->{userfolder_subject_regexp}->{$userfolder} }) {
-						next if ! $regexp;
-
-					   if ( $email_h->{header}->{Subject} =~ /($regexp)/ ) {
-					       $userfolders{$userfolder}{$uid} = "move_to_$userfolder regexp_sub;$regexp;$1; ".$email_h->{header}->{Subject}."   $dt > $email_h->{calculated}->{received}";
-					       $next=1;
-					       last;
-					   }
-					}
-				 }
-            }
-            next if $next;
 
         } #for uid
 
-        if (keys %spam) {
-            for my $uid(keys %spam) {
-#            	my $decoder = Encode::Guess->guess($spam{$uid});
-#            	warn "Problem decoding. Error message: $decoder\n$spam{$uid}\n" unless ref($decoder);
-                print "$uid moved to spam ";
-                print $spam{$uid} or die ord $spam{$uid};
-                print "\n";
-                $imap->move('INBOX.Spam',$uid);
+        if (keys %action) {
+            warn Dump \%action;
+            die;
+            for my $uid(keys %action) {
+            	# my $decoder = Encode::Guess->guess($action{$uid});
+            	# warn "Problem decoding. Error message: $decoder\n$action{$uid}\n" unless ref($decoder);
+                print  Dumper $action{$uid} or die ord $action{$uid};
+                if ($action{$uid}{action} eq 'move_to') {
+                    print "\n";
+                    print "$uid moved to $action{$uid}{folder} ";
+                    $imap->move($action{$uid}{folder},$uid);
+                }
             }
         }
 
-
-        if (keys %userfolders) {
-            for my $folder(keys %userfolders) {
-            	for my $uid(keys %{$userfolders{$folder} }) {
-	                print "$uid moved to $folder";
-	                print $userfolders{$folder}{$uid} or die ord $userfolders{$folder}{$uid};
-	                print "\n";
-	                $imap->move('INBOX.'.$folder,$uid);
-	            }
-            }
-        }
 
     	#SH::PrettyPrint::print_hashes \@hashes;
 
@@ -408,8 +359,8 @@ sub main {
     	$imap->expunge;
     	$imap->logout
     	    or die "Logout error: ", $imap->LastError, "\n";
-    }
+    } #connection
 
-}
+} # main
 
 __PACKAGE__->new->main;
