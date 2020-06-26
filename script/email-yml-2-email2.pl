@@ -22,6 +22,7 @@ use utf8;
 use open ':encoding(UTF-8)';
 use YAML::Tiny;
 use Data::Dumper;
+binmode STDOUT, ':encoding(UTF-8)';
 
 #use Carp::Always;
 
