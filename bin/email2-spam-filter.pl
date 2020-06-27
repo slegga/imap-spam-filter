@@ -153,7 +153,7 @@ sub main {
     	Debug    => $config_data->{connection}->{$emc}->{Debug},
     	Peek     => 1,);
 
-say Dumper \%connect;
+#say Dumper \%connect;
     	my $imap = Mail::IMAPClient->new(%connect) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
@@ -179,7 +179,7 @@ say Dumper \%connect;
         say $config_data->{connection}->{$emc}->{Folder_Sent} ;
         $imap->select( $config_data->{connection}->{$emc}->{Folder_Sent} ) or die "$emc: Select '".($config_data->{connection}->{$emc}->{Folder_Sent}//'__UNDEF__')."' error: ", $imap->LastError, "\n";
         @all =grep {$_} $imap->since($last_read_sent_epoch);
-        warn "Antall sent siden sist:".scalar @all;
+#        warn "Antall sent siden sist:".scalar @all;
 
         for my $uid(@all) {
             my $text = $imap->message_string($uid);
@@ -299,14 +299,14 @@ say Dumper \%connect;
                             } else { last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
-                          
+
                             if ($email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
                             } else { last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
-                          
+
                             if ($email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
