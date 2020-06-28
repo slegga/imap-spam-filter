@@ -91,7 +91,7 @@ sub main {
     pop @$tmp;
     my $project_dir = path(@$tmp);
 
-    $sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
+#    $sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
 
     # Get a database handle from the cache for multiple queries
     $db = $sqlite->db;
@@ -287,6 +287,12 @@ sub main {
                         if ($v eq 'from_is') {
                             if ($email_h->{calculated}->{from} eq $crit->{$v}) {
                                 $action{$uid}{reason} .= $v;
+                                $hit=1;
+                            } else { last }
+                        } elsif ($v eq 'from_like') {
+                            my $qr = qr($crit->{$v});
+                            if ($email_h->{calculated}->{from} =~ /$qr/) {
+                                $action{$uid}{reason} .= join (' ',$v,$email_h->{calculated}->{from},'=~', $crit->{$v});
                                 $hit=1;
                             } else { last }
                         } elsif ($v eq 'body_like') {
