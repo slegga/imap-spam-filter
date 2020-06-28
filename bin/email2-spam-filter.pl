@@ -356,8 +356,7 @@ sub main {
         } #for uid
 
         if (keys %action) {
-            warn Dump \%action;
-            die;
+
             for my $uid(keys %action) {
             	# my $decoder = Encode::Guess->guess($action{$uid});
             	# warn "Problem decoding. Error message: $decoder\n$action{$uid}\n" unless ref($decoder);
