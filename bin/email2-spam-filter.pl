@@ -91,7 +91,7 @@ sub main {
     pop @$tmp;
     my $project_dir = path(@$tmp);
 
-    $sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
+#    $sqlite->migrations->from_file($project_dir->child('migrations','email.sql')->to_string)->migrate(1);
 
     # Get a database handle from the cache for multiple queries
     $db = $sqlite->db;
@@ -153,7 +153,7 @@ sub main {
     	Debug    => $config_data->{connection}->{$emc}->{Debug},
     	Peek     => 1,);
 
-say Dumper \%connect;
+#say Dumper \%connect;
     	my $imap = Mail::IMAPClient->new(%connect) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
@@ -179,7 +179,7 @@ say Dumper \%connect;
         say $config_data->{connection}->{$emc}->{Folder_Sent} ;
         $imap->select( $config_data->{connection}->{$emc}->{Folder_Sent} ) or die "$emc: Select '".($config_data->{connection}->{$emc}->{Folder_Sent}//'__UNDEF__')."' error: ", $imap->LastError, "\n";
         @all =grep {$_} $imap->since($last_read_sent_epoch);
-        warn "Antall sent siden sist:".scalar @all;
+#        warn "Antall sent siden sist:".scalar @all;
 
         for my $uid(@all) {
             my $text = $imap->message_string($uid);
@@ -288,6 +288,12 @@ say Dumper \%connect;
                                 $action{$uid}{reason} .= $v;
                                 $hit=1;
                             } else { last }
+                        } elsif ($v eq 'from_like') {
+                            my $qr = qr($crit->{$v});
+                            if ($email_h->{calculated}->{from} =~ /$qr/) {
+                                $action{$uid}{reason} .= join (' ',$v,$email_h->{calculated}->{from},'=~', $crit->{$v});
+                                $hit=1;
+                            } else { last }
                         } elsif ($v eq 'body_like') {
                             my $qr = qr/($crit->{$v})/;
                             next if ! exists $email_h->{body}->{content};
@@ -298,14 +304,14 @@ say Dumper \%connect;
                             } else { last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
-                          
+
                             if ($email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
                             } else { last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
-                          
+
                             if ($email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
@@ -355,8 +361,7 @@ say Dumper \%connect;
         } #for uid
 
         if (keys %action) {
-            warn Dump \%action;
-            die;
+
             for my $uid(keys %action) {
             	# my $decoder = Encode::Guess->guess($action{$uid});
             	# warn "Problem decoding. Error message: $decoder\n$action{$uid}\n" unless ref($decoder);
