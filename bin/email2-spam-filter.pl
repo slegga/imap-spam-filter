@@ -274,8 +274,7 @@ say Dumper \%connect;
             die "Can not get Received date " .Dumper $email_h->{header}->{Received} if !$res;
 
 
-#print   map{"$_ . $config_data->{$_}\n"}  keys %$config_data;
-#die;
+            # LOOP over rules
             for my $rule( sort{$self->orderval($config_data->{$a}) <=> $self->orderval($config_data->{$a})}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data) {
                 next if $rule eq 'connection';
                 last if $next==1;
