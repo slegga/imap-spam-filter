@@ -33,11 +33,13 @@ no warnings qw(experimental::signatures);
 binmode STDOUT, ':encoding(UTF-8)';
 binmode STDIN, ':encoding(UTF-8)';
 
-#use DateTime::Format::RFC3501;
-
 =head1 NAME
 
-imap-spam-filter.pl
+imap-spam-filter.pl - Clean email
+
+=head1 DESCRIPTION
+
+Script for cleaning your email account.
 
 =cut
 

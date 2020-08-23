@@ -34,7 +34,11 @@ binmode STDOUT, ':encoding(UTF-8)';
 
 =head1 NAME
 
-imap-spam-filter.pl
+imap-spam-filter.pl - Spam filter
+
+=head1 DESCRIPTION
+
+Spam filter for your Email account.
 
 =cut
 

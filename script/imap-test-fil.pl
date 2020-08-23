@@ -20,11 +20,16 @@ use DateTime::Format::RFC3501;
 
 =head1 NAME
 
-imap-spam-filter.pl
+imap-spam-filter.pl - Spamfilter
+
+=head1 DESCRIPTION
+
+Script for put clean your email account. Script login to account and do steady after rules you  have given.
 
 =cut
 
 # Find and manage the project root directory
+
 has home => sub { path($0)->sibling('..') };
 option 'verbose!', 'Turn on verbose output';
 option 'debug!', 'Turn on debug output';
