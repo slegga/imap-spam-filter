@@ -307,14 +307,14 @@ sub main {
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
 
-                            if ($email_h->{header}->{Subject} =~ /$qr/) {
+                            if ($email_h->{header}->{Subject} && $email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
                             } else { last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
 
-                            if ($email_h->{header}->{Subject} =~ /$qr/) {
+                            if ($email_h->{header}->{Subject} && $email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
                             } else { last }
