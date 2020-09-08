@@ -240,7 +240,7 @@ sub main {
                 && $prev_email_h->{header}->{'Return-Path'}     eq $email_h->{header}->{'Return-Path'}  ) {
                     my $move_uid;
                     $move_uid = $prev_email_h->{calculated}->{size} > $email_h->{calculated}->{size} ? $email_h->{uid} : $prev_email_h->{uid};
-                    $action{$move_uid} = {rule=>"MOVE DUPLICATE ", action =>'move_to',folder=>'spam', email_name=>$prev_email_h->{header}->{Subject} };
+                    $action{$move_uid} = {rule=>"MOVE DUPLICATE ", action =>'move_to',folder=>'INBOX.Spam', email_name=>$prev_email_h->{header}->{Subject} };
                 }
 
                 #remove old weeks
