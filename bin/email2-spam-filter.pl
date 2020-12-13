@@ -258,8 +258,10 @@ sub main {
                 }
             }
             $prev_email_h = clone $email_h;
-
-            $email_h->{calculated}->{from} = $convert->extract_emailaddress($email_h->{header}->{From}) or next;
+            {
+                my $from = $email_h->{header}->{From} || $email_h->{header}->{'Return-Path'};
+                $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
+            }
             # delay remove of ads only on dates not datetimes
             my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1];
 #            warn $res;
