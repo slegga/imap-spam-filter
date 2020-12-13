@@ -223,7 +223,7 @@ sub main {
             my $next = 0;
             my $text = $imap->message_string($uid);
             if (my $re = $self->regexp) {
-                next if !$text =~ /$re/;
+                next if $text !~ /$re/;
             }
             my $email_h = $convert->msgtext2hash($text);
 
