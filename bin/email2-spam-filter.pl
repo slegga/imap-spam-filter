@@ -291,13 +291,13 @@ sub main {
                             if ($email_h->{calculated}->{from} eq $crit->{$v}) {
                                 $action{$uid}{reason} .= $v;
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } elsif ($v eq 'from_like') {
                             my $qr = qr($crit->{$v});
                             if ($email_h->{calculated}->{from} =~ /$qr/) {
                                 $action{$uid}{reason} .= join (' ',$v,$email_h->{calculated}->{from},'=~', $crit->{$v});
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } elsif ($v eq 'body_like') {
                             my $qr = qr/($crit->{$v})/;
                             next if ! exists $email_h->{body}->{content};
@@ -305,21 +305,21 @@ sub main {
                             if ($email_h->{body}->{content} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1. "=~". $qr;
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
 
                             if ($email_h->{header}->{Subject} && $email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
 
                             if ($email_h->{header}->{Subject} && $email_h->{header}->{Subject} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } elsif ($v =~ /(.+)_contain$/) {
                             my $header= $1;
                             my $part = $crit->{$v};
@@ -328,7 +328,7 @@ sub main {
                             if (index($email_h->{header}->{$header},$part)>-1) {
                                 $action{$uid}{reason} .= $v.' '.'$header like' .$part;
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } elsif ($v eq 'ip_address_in') {
                             my $slice = $crit->{$v};
                             my $ip = $email_h->{header}->{'X-XClient-IP-Addr'};
@@ -336,7 +336,7 @@ sub main {
                             NetAddr::IP->new($ip)->within(NetAddr::IP->new($slice)) ) {
                                 $action{$uid}{reason} .= join(' ',$v,$ip,'part of',$slice);
                                 $hit=1;
-                            } else { last }
+                            } else { $hit=0;last }
                         } else {
                             die "Unsupported keyword $v at $rule ".Dump $crit;
                         }
