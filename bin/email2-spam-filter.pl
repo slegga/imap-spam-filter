@@ -369,8 +369,8 @@ sub main {
             for my $uid(keys %action) {
             	# my $decoder = Encode::Guess->guess($action{$uid});
             	# warn "Problem decoding. Error message: $decoder\n$action{$uid}\n" unless ref($decoder);
-                print  Dumper $action{$uid} or die ord $action{$uid};
-                if ($action{$uid}{action} eq 'move_to') {
+                if ($action{$uid}{action} && $action{$uid}{action} eq 'move_to') {
+                    print  Dumper $action{$uid} or die ord $action{$uid};
                     print "\n";
                     print "$uid moved to $action{$uid}{folder} ";
                     $imap->move($action{$uid}{folder},$uid);
