@@ -9,6 +9,8 @@ blocked:
   criteria:
     -
       body_like: netflix
-      from_like: [^c\.][^on][^mo]$
+      from_not_like: netflix.(com|no)$
     -
-      subject_like: deilig\ssex
+      subject_like: deilig[\s_]sex
+  expiration_days: 0
+  move_to: INBOX.Spam

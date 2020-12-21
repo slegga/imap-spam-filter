@@ -1,24 +1,42 @@
 $files = {
            '_<t/email2-spam-filter2.t' => [
                                             {
-                                              'text' => '$to->main({configfile=>\'t/config/email2.yml\', testing=>1}); #,iterations=>1,mode=>\'mocked\'
-',
                                               'type' => 'user',
                                               'expr' => undef,
-                                              'line' => 23,
                                               'fname' => 't/email2-spam-filter2.t',
+                                              'text' => '$to->main({configfile=>\'t/config/email2.yml\', testing=>1}); #,iterations=>1,mode=>\'mocked\'
+',
+                                              'line' => 23,
                                               'value' => '1'
                                             }
                                           ],
            '_<./bin/email2-spam-filter.pl' => [
                                                 {
-                                                  'value' => '1',
+                                                  'type' => 'user',
+                                                  'expr' => undef,
+                                                  'text' => '                next if $rule eq \'connection\';
+',
                                                   'fname' => './bin/email2-spam-filter.pl',
-                                                  'line' => '237',
+                                                  'value' => '1',
+                                                  'line' => '298'
+                                                },
+                                                {
                                                   'expr' => undef,
                                                   'type' => 'user',
-                                                  'text' => '            my $next = 0;
+                                                  'value' => '1',
+                                                  'line' => '239',
+                                                  'fname' => './bin/email2-spam-filter.pl',
+                                                  'text' => '            my $text = $imap->message_string($uid);
 '
+                                                },
+                                                {
+                                                  'type' => 'user',
+                                                  'expr' => undef,
+                                                  'text' => '                    for my $v(keys %$crit) {
+',
+                                                  'fname' => './bin/email2-spam-filter.pl',
+                                                  'value' => '1',
+                                                  'line' => '304'
                                                 }
                                               ]
          };
@@ -32,13 +50,29 @@ $expr_list = [
                  'depth' => 1
                },
                {
-                 'depth' => -1,
-                 'expr' => '@all'
+                 'expr' => '@all',
+                 'depth' => -1
                },
                {
                  'expr' => '$uid',
                  'depth' => -1
+               },
+               {
+                 'depth' => 0,
+                 'expr' => '$config_data->{$rule}->{criteria}'
+               },
+               {
+                 'depth' => -1,
+                 'expr' => '$crit'
+               },
+               {
+                 'expr' => '$qr',
+                 'depth' => -1
+               },
+               {
+                 'expr' => '$v',
+                 'depth' => -1
                }
              ];
 $eval_saved_text = undef;
-$main_win_geometry = '960x1015+960+0';
+$main_win_geometry = '960x1015+958+0';

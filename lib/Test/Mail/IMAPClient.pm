@@ -26,6 +26,7 @@ has 'Folder_INBOX';
 has 'Folder_Sent';
 has 'selected_folder';
 has 'error' =>'';
+has 'move_to' =>sub{{}};
 
 =head1 METHODS
 
@@ -74,6 +75,10 @@ sub since($self,$date) {
     return path($self->selected_folder)->list->each;
 }
 
+=head2 search
+
+=cut
+
 sub search($self,@string){
     if ($string[0] eq 'ALL') {
         my $tdir = $self->selected_folder||$self->Folder_INBOX;
@@ -84,25 +89,57 @@ sub search($self,@string){
     ...;
 }
 
+=head2 LastError
+
+=cut
+
 sub LastError($self) {
     return $self->error;
 }
+
+=head2 message_string
+
+=cut
 
 sub message_string($self,$uid) {
     return path($uid)->slurp;
 }
 
+=head2 size
+
+=cut
+
 sub size($self,$uid) {
     return length(path($uid)->slurp);
 }
 
+=head2 expunge
+
+=cut
+
 sub expunge($self) {
     # Delete marked deleted emails
-    return
+    return $self->move_to;
+
 }
+
+=head2 logout
+
+=cut
 
 sub logout($self) {
     # do nothing
     return 1
+}
+
+=head2 move
+
+=cut
+
+sub move($self,$folder,$uid) {
+    my $m = $self->move_to;
+    push @{ $m->{$folder} }, $uid;
+    $self->move_to($m);
+    return $self;
 }
 1;

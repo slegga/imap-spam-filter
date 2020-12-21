@@ -82,6 +82,7 @@ sub main {
 
     my $CONFIGFILE = $self->configfile;
     my $config_data;
+    my $test_return;
     my $epoch = time;
 	#
 	#	SETUP database
@@ -232,6 +233,7 @@ sub main {
         my $prefix =   $config_data->{connection}->{$emc}->{weekword}|| 'Melding fra ';
 
         #MAIN LOOP
+        my @rules = sort{$self->orderval($config_data->{$b}) <=> $self->orderval($config_data->{$a})}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data;
 
         for my $uid(@all) {
             my $next = 0;
@@ -293,7 +295,7 @@ sub main {
 
 
             # LOOP over rules
-            for my $rule( sort{$self->orderval($config_data->{$a}) <=> $self->orderval($config_data->{$a})}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data) {
+            for my $rule( @rules ) {
                 next if $rule eq 'connection';
                 last if $next==1;
                 my $dt = time - $config_data->{$rule}->{expiration_days} * 24 *60 *60;
@@ -305,17 +307,27 @@ sub main {
                             if ($email_h->{calculated}->{from} eq $crit->{$v}) {
                                 $action{$uid}{reason} .= $v;
                                 $hit=1;
-                            } else { $hit=0;last }
+                            } else { $hit=0;last; }
                         } elsif ($v eq 'from_like') {
                             my $qr = qr($crit->{$v});
                             if ($email_h->{calculated}->{from} =~ /$qr/) {
                                 $action{$uid}{reason} .= join (' ',$v,$email_h->{calculated}->{from},'=~', $crit->{$v});
                                 $hit=1;
                             } else { $hit=0;last }
+                        } elsif ($v eq 'from_not_like') {
+                            my $qr = qr($crit->{$v});
+                            if ($email_h->{calculated}->{from} !~ /$qr/) {
+                                $action{$uid}{reason} .= join (' ',$v,$email_h->{calculated}->{from},'!~', $crit->{$v});
+                                $hit=1;
+                            } else { $hit=0;last }
                         } elsif ($v eq 'body_like') {
                             my $qr = qr/($crit->{$v})/;
-                            next if ! exists $email_h->{body}->{content};
-                            next if ! $email_h->{body}->{content};
+                            if (! exists $email_h->{body}->{content}) {
+                                $hit=0;last;
+                            }
+                            if (! $email_h->{body}->{content}) {
+                                $hit=0; last;
+                            }
                             if ($email_h->{body}->{content} =~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. $1. "=~". $qr;
                                 $hit=1;
@@ -337,8 +349,12 @@ sub main {
                         } elsif ($v =~ /(.+)_contain$/) {
                             my $header= $1;
                             my $part = $crit->{$v};
-                            next if !exists $email_h->{header}->{$header};
-                            next if ! $email_h->{header}->{$header};
+                            if (!exists $email_h->{header}->{$header}) {
+                                $hit=0; last;
+                            }
+                            if (! $email_h->{header}->{$header}) {
+                                $hit=0; last;
+                            }
                             if (index($email_h->{header}->{$header},$part)>-1) {
                                 $action{$uid}{reason} .= $v.' '.'$header like' .$part;
                                 $hit=1;
@@ -373,6 +389,7 @@ sub main {
                         last;
 
                     }
+                    $action{$uid}{reason}=undef;
                 }
             }
 
@@ -397,11 +414,11 @@ sub main {
 
     	# TODO: Only keep 1 or x of emails from this sender.
 
-    	$imap->expunge;
+    	$test_return = $imap->expunge;
     	$imap->logout
     	    or die "Logout error: ", $imap->LastError, "\n";
     } #connection
-
+    return $test_return;
 } # main
 
 __PACKAGE__->new->main;
