@@ -1,0 +1,36 @@
+$files = {
+           '_</home/stein/git/imap-spam-filter/t/../../utilities-perl/lib/Test/ScriptX.pm' => [
+                                                                                                {
+                                                                                                  'type' => 'user',
+                                                                                                  'line' => 125,
+                                                                                                  'expr' => undef,
+                                                                                                  'value' => '1',
+                                                                                                  'text' => '	            $module->new(scriptname=>$self->scriptname->to_string,%attr)->$mainsub(@opts);
+',
+                                                                                                  'fname' => '/home/stein/git/imap-spam-filter/t/../../utilities-perl/lib/Test/ScriptX.pm'
+                                                                                                },
+                                                                                                {
+                                                                                                  'line' => 127,
+                                                                                                  'type' => 'user',
+                                                                                                  'expr' => undef,
+                                                                                                  'value' => '1',
+                                                                                                  'fname' => '/home/stein/git/imap-spam-filter/t/../../utilities-perl/lib/Test/ScriptX.pm',
+                                                                                                  'text' => '	        	$module->with_roles(@{ $self->roles })->new(scriptname=>$self->scriptname->to_string,%attr)->$mainsub(@opts);
+'
+                                                                                                }
+                                                                                              ],
+           '_<(eval 70)[/home/stein/git/imap-spam-filter/t/../../utilities-perl/lib/Test/ScriptX.pm:84]' => [
+                                                                                                              {
+                                                                                                                'line' => '50',
+                                                                                                                'type' => 'user',
+                                                                                                                'expr' => undef,
+                                                                                                                'value' => '1',
+                                                                                                                'fname' => '(eval 70)[/home/stein/git/imap-spam-filter/t/../../utilities-perl/lib/Test/ScriptX.pm:84]',
+                                                                                                                'text' => '    my $self = shift;
+'
+                                                                                                              }
+                                                                                                            ]
+         };
+$expr_list = [];
+$eval_saved_text = undef;
+$main_win_geometry = '960x1015+960+0';

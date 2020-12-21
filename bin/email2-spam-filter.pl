@@ -28,6 +28,7 @@ use Mojo::SQLite;
 use Mojo::SQLite::Migrations;
 use FindBin;
 use Mojo::File;
+use Test::Mail::IMAPClient;
 no warnings qw(experimental::signatures);
 
 binmode STDOUT, ':encoding(UTF-8)';
@@ -51,6 +52,8 @@ option 'regexp=s', 'Regexp on email. Mainly for debugging purposes';
 option 'info!',  'Print out config data. And exit';
 option 'server=s', 'regexp på server name, for running only one or few not all';
 
+
+has 'configfile'=> $ENV{HOME} . '/etc/email2.yml';
 
 # calculate rule order for sort. Return a value for sorting
 sub orderval {
@@ -77,7 +80,7 @@ sub main {
 
    my $self = shift;
 
-    my $CONFIGFILE = $ENV{HOME} . '/etc/email2.yml';
+    my $CONFIGFILE = $self->configfile;
     my $config_data;
     my $epoch = time;
 	#
@@ -107,6 +110,11 @@ sub main {
     } or do {
         confess $@;
     };
+
+    if($ENV{MOCK} ) {
+        say "MOCK";
+        return 1;
+    }
 
 	for my $name (qw /banned_email_headers banned_ip_slices/)  {
 	    my $file = $self->home->child("data/$name.yml");
@@ -156,8 +164,14 @@ sub main {
     	Peek     => 1,);
 
 #say Dumper \%connect;
-    	my $imap = Mail::IMAPClient->new(%connect) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
-
+    	my $imap;
+    	if($connect{Server} eq 'files') {
+    	    $connect{$_} = $config_data->{connection}->{$emc}->{$_} for (keys %{$config_data->{connection}->{$emc}});
+    	    $imap = Test::Mail::IMAPClient->new(%connect);
+    	}
+    	else {
+    	    $imap = Mail::IMAPClient->new(%connect) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
+        }
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
 #    	$imap->connect or die "Could not connect: $@\n";
         my $folders = $imap->folders

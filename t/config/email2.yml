@@ -1,0 +1,14 @@
+---
+connection:
+  testfiles:
+    Debug: '0'
+    Folder_Sent: 't/sent'
+    Server: files
+    Folder_INBOX: 't/email-folder'
+blocked:
+  criteria:
+    -
+      body_like: netflix
+      from_like: [^c\.][^on][^mo]$
+    -
+      subject_like: deilig\ssex

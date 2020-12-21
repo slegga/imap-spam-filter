@@ -1,0 +1,44 @@
+$files = {
+           '_<t/email2-spam-filter2.t' => [
+                                            {
+                                              'text' => '$to->main({configfile=>\'t/config/email2.yml\', testing=>1}); #,iterations=>1,mode=>\'mocked\'
+',
+                                              'type' => 'user',
+                                              'expr' => undef,
+                                              'line' => 23,
+                                              'fname' => 't/email2-spam-filter2.t',
+                                              'value' => '1'
+                                            }
+                                          ],
+           '_<./bin/email2-spam-filter.pl' => [
+                                                {
+                                                  'value' => '1',
+                                                  'fname' => './bin/email2-spam-filter.pl',
+                                                  'line' => '237',
+                                                  'expr' => undef,
+                                                  'type' => 'user',
+                                                  'text' => '            my $next = 0;
+'
+                                                }
+                                              ]
+         };
+$expr_list = [
+               {
+                 'expr' => '%connect',
+                 'depth' => 1
+               },
+               {
+                 'expr' => '$self',
+                 'depth' => 1
+               },
+               {
+                 'depth' => -1,
+                 'expr' => '@all'
+               },
+               {
+                 'expr' => '$uid',
+                 'depth' => -1
+               }
+             ];
+$eval_saved_text = undef;
+$main_win_geometry = '960x1015+960+0';

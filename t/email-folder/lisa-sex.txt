@@ -1,0 +1,100 @@
+From mailuser  Sat Dec 19 09:40:25 2020
+Return-Path: <sharlahandley1980557@hotmail.com>
+Received: from nmspam4.e.nsc.no (nmspam4.e.nsc.no [148.123.163.135])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-384) server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by nmmx5.e.nsc.no (mx.online.no) with ESMTPS id 0F04260144;
+	Sat, 19 Dec 2020 09:40:25 +0100 (CET)
+Received: from EUR04-HE1-obe.outbound.protection.outlook.com (mail-oln040092073011.outbound.protection.outlook.com [40.92.73.11])
+	by nmspam4.e.nsc.no  with ESMTP id 0BJ8eItR003374-0BJ8eItT003374
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=CAFAIL);
+	Sat, 19 Dec 2020 09:40:21 +0100
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=M/FZNgyI2flZ5OO6CEK+F30ZvQFmgWrUXsL6nUNidCwpaYwW3nHwN26D+6MmsM7A74HusTY8VBRf5VzmiZNaPIi+ydd4NhqR6VpLp7KX6QuveAWSLf3aKVemiNKm6+0LNXkG7vMXuXmWAZ5EUoNfiWZt21SxCzLY2b9ygZzP+HLFFJGIPTekMPFb1Q/EELh4siI3wrbZvc8GUU/ApZprZ3HwmjdDe0s+PyehQqZIvUT/5tnoGgrS5dm03EEbTs2CdvhJpnweWS0yTqmVDqfHaQVgmiDWsps45yvufhds4xlXNda10NTav4qrEOrxPTPD5foED3ZLukk9u6LHkZKIvg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MJo5c5wqvxehtNvQvCSjeS4s/mk9z3PkLYrRidhHRtA=;
+ b=Ugryc6MpfiZ/oXpu+OdcYSca6424XgFCxtNTm1QivFL2Cv/DpleL7jtlo9o3It0VC1zndeEtDW5xbTHlbhhL5m24JAJM3G70RBRGLHgPRndpbdFnQDLzVunJft2ZR45Ytyh5ww5fpT73jQxbS0EMYxKG7dSNP31b24nIjKwST8ZJksE4guA7KpsBncpI+FcPA7u76g5OsfpFUjHeDVU5rbKtIu+liLg8Ta9NmoZ4sTl+0R0WpmM62v4Ba4R24/UjUOARNYTNbKihjJB01EqxHTjQsLr3UdIVXGYMH8ePqYbKmTEKb2E/d68l7hxy4wXFzXfGebJEk65tX/+zMCShAA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hotmail.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=MJo5c5wqvxehtNvQvCSjeS4s/mk9z3PkLYrRidhHRtA=;
+ b=QIuwxkke9jYbJ7QEUgizPHKScrCgCRgU1yTzT4uDpx/dvkT4uZoQcbhkDpR035QHWGbwQ3YkNVOkhCg3o6HVAqw1snYOfUGsW943dPQJ7EWiEyp6qCmcoxTN2gg3jUdMGmELuHshgz3YEwlYoG6vDcO0/7D936uO49SJNgu6+feZW2EtRVGV7s6NlC4M09mJiRYkiiXRdMljc/YbByH4qPkRQKRuSJOxB1tZemlvOVfYoI2s2Eg7c+YELpfWAGWm83ynOR5vVRtgfhxGXsWMaagCwpnDIQdCf/7m08hBhdf5dyBv5qHhVyivBbbmOjd2ZyXmLs5Ja5zRBEfxEpbw7w==
+Received: from DB3EUR04FT023.eop-eur04.prod.protection.outlook.com
+ (2a01:111:e400:7e0c::40) by
+ DB3EUR04HT227.eop-eur04.prod.protection.outlook.com (2a01:111:e400:7e0c::148)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3676.22; Sat, 19 Dec
+ 2020 08:40:16 +0000
+Received: from AM8PR06MB6931.eurprd06.prod.outlook.com
+ (2a01:111:e400:7e0c::42) by DB3EUR04FT023.mail.protection.outlook.com
+ (2a01:111:e400:7e0c::138) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3676.22 via Frontend
+ Transport; Sat, 19 Dec 2020 08:40:16 +0000
+X-IncomingTopHeaderMarker:
+ OriginalChecksum:9BCC401EB0EBA5DBA8269D83655DAACF9B55207B00165DC6F902627ACF05CEF3;UpperCasedChecksum:042166E317867137F1ED729A4DDCF0F2FF28E77FE9DD01B66D7144107BC1D202;SizeAsReceived:9872;Count:41
+Received: from AM8PR06MB6931.eurprd06.prod.outlook.com
+ ([fe80::9837:79ab:c5fa:9e6a]) by AM8PR06MB6931.eurprd06.prod.outlook.com
+ ([fe80::9837:79ab:c5fa:9e6a%6]) with mapi id 15.20.3676.025; Sat, 19 Dec 2020
+ 08:40:16 +0000
+Content-Type: multipart/alternative; boundary="===============3304053543815158146=="
+Subject: =?utf-8?q?Trenger_deilig_sex_akkurat_n=C3=A5!_?=
+From: Lisa <sharlahandley1980557@hotmail.com>
+To: sharlahandley1980557@hotmail.com
+Date: Sat, 19 Dec 2020 08:40:14 +0000
+X-TMN: [tqDRU/MTGHUzlYDXQtOnGF77fTlnJVNP]
+X-ClientProxiedBy: VI1PR0602CA0010.eurprd06.prod.outlook.com
+ (2603:10a6:800:bc::20) To AM8PR06MB6931.eurprd06.prod.outlook.com
+ (2603:10a6:20b:1de::7)
+Message-ID:
+ <AM8PR06MB6931D0F1BD93A1E81EED24888EC20@AM8PR06MB6931.eurprd06.prod.outlook.com>
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from [192.168.0.100] (5.2.223.139) by VI1PR0602CA0010.eurprd06.prod.outlook.com (2603:10a6:800:bc::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3654.12 via Frontend Transport; Sat, 19 Dec 2020 08:40:14 +0000
+X-MS-PublicTrafficType: Email
+X-IncomingHeaderCount: 41
+X-EOPAttributedMessage: 0
+X-MS-Office365-Filtering-Correlation-Id: 216c46ac-442e-4cf8-8db1-08d8a3f9b602
+X-MS-Exchange-SLBlob-MailProps:
+	3R77UsUWwWdYOx8NTtTF1qg97vz9smvEyEtneNb0tN99ox/LXL48c/7G1mgfHrNGDOXtRvwKPA5Jci8h3dCITpoZMUuxbpPiBsWNUkljfjZp+LlpwVhHvSb5QSOof264A5sJl2HngS70Iy1b8wpItpdw1U0e2nJC0uUQOsj3HQNIaZxmE1JrD9padEInrR8QhvNPNeN0kmuRhhJao4Fv4u/noF/IT8ERPNhqJRFkIyxLIDY0soO3W5/QPusCCSR/UGZCMtDuzOnt0fLBBdfj1cljxZrX5IM++ozjE6CQdDjIM9yLBivuZgRGpqFPVnrrqLHJ75W6Cqk24MEdewxx/edHJhkhZYQGJrBkJYOBhfHEjBMF1ZVfdTxXqTaCtAQ3N05pjkA9cMMV2gWwtH28ZHc2cMn0ays/4kftueZ9IYkt1swCYdwGsuynMWL40V3PCuHQiT7p3+PSwXde0lLbIaWD5yHieqv8II1mb0QM+qqTgJRc/x9d1P2Hn+GAA7YWhMEHG+gpK97yU/TqGbb2dZEjvqHm03tjyFiSjK71RS1Zi8KZsR9ApwoObOmmQ79nyRGERaF/4VDjiyUuelg4JY7aiAYvc4cBdONGmhdXFbxeUcr+t5HluABjH1h+4pyiIo85mZsBR0TQPDwFbYSF8w9MWHgYwAJTiej9b5t3UjXf0nhb6/DQNJPlj2IKTM+o+gGm5zeFy/qAfOmprN7YumHbLT5ncW9gtEHywlYFHNmtP/i5JExKyOSh2MTolyDumrM4L0s/cV+aLCiTJRNKWbDfBUNv0aRkiOyrz/jJcpZogsVTk2CrClws2KQpm3Yh295/GTkn4ZP3SFaQytdSA6wqm1tpPQCW+y9aTcT5KzjAAnxH6rP+QEF+N+7MDkvQpIqq7sHb9Ma1v7mBSKu6SQ==
+X-MS-TrafficTypeDiagnostic: DB3EUR04HT227:
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	T8nvZoqRQUSfyFYugQQydMRWTRcGwkOe1EljJT5hoDZK4Ew/+p3ELZLLYIT9vByM9rpj/m3Mc8AbUCsDfZIiOMxe8t+oBBowjnLRfWJQkZlPb8sK3ctCuZdkooZscUSvRelZcfY+vN2fumubWfcSzvWB4kl++tunIMK+INpKDOO8yjHY2dAUzG+UkV+uFcHd7Ws7rLdJ4oxuiiT+hphlXGLMb2bEJjJfGcc4seAryFTvx/vlPNNFCBWGowz+Hmp538XmyOWbYHzWWf22voEfUZlM4C+dsJLDcSTcTgyr1jQ=
+X-MS-Exchange-AntiSpam-MessageData:
+	cWnozgy8KB7eD9GqTAz1yCfGlBA22uccmwcGRIlUcb31pC2QTILm3Pmc9rKG/eDqa4A8XBBHtlkg41/j7kqx3KhZa88h/zj+i9AE9e3swI0GDtqNxAvSkAwrUSuGyFGzR07DrK7IU1tx8laPYepe5Q==
+X-OriginatorOrg: hotmail.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Dec 2020 08:40:16.7843
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-Network-Message-Id: 216c46ac-442e-4cf8-8db1-08d8a3f9b602
+X-MS-Exchange-CrossTenant-AuthSource:
+	DB3EUR04FT023.eop-eur04.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB3EUR04HT227
+Authentication-Results: nmspam4.e.nsc.no;
+	spf=pass (nsc.no: domain of sharlahandley1980557@hotmail.com designates 40.92.73.11 as permitted sender) smtp.mailfrom=sharlahandley1980557@hotmail.com
+X-FE-Policy-ID: 0:1:3:SYSTEM
+X-Telenor_id: 0F04260144
+X-XClient-IP-Addr: 40.92.73.11
+X-Source-IP: 40.92.73.11
+X-Scanned-By: MIMEDefang 2.84 on 10.123.160.164
+
+--===============3304053543815158146==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+
+SHZpcyBkdSBlciBpbnRlcmVzc2VydCBzw6Ugc2thbCBqZWcgZ2FyYW50ZXJlIGRlZyBub2VuIHNw
+ZW5uZW5kZSBzdHVuZGVyLCBzw6Ugdmkga2FuIGtvc2Ugb3NzIGxpdHQgZWtzdHJhIGkgaHZlcmRh
+Z2VuICAgaHR0cDovL3d3dy5zZWtzaWxpbmphLm9ubGluZSAgISBKZWcgZXIga2xhciBmb3IgZGVn
+IG9tIGR1IHRyZW5nZXIgw6UgYmxpIHJpZGQgc2tpa2tlbGlnISBMaXNhCg==
+
+--===============3304053543815158146==--
