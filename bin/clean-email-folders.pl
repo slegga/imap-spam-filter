@@ -62,7 +62,7 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
     my $convert = SH::Email::ToHash->new;
 
     my $pf = DateTime::Format::Mail->new();
-    for my $emc( grep {ref $config_data->{$_} eq 'HASH'} keys %$config_data) {
+    for my $emc(  keys %{ $config_data->{connection} }) {
     	next if $emc eq 'banned_email_headers';
     	next if $emc eq 'advertising_three_days';
     	next if $emc eq 'blocked_email';
@@ -72,14 +72,14 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
             next if $emc!~/$s/;
         }
     	my $imap = Mail::IMAPClient->new(
-    	Server   => $config_data->{$emc}->{Server},
-    	User     => $config_data->{$emc}->{Username},
-    	Password => $config_data->{$emc}->{Password},
-    	Ssl      => $config_data->{$emc}->{Ssl},
-    	Uid      => $config_data->{$emc}->{Uid},
-    	Debug    => $config_data->{$emc}->{Debug},
+    	Server   => $config_data->{connection}->{$emc}->{Server},
+    	User     => $config_data->{connection}->{$emc}->{Username},
+    	Password => $config_data->{connection}->{$emc}->{Password},
+    	Ssl      => $config_data->{connection}->{$emc}->{Ssl},
+    	Uid      => $config_data->{connection}->{$emc}->{Uid},
+    	Debug    => $config_data->{connection}->{$emc}->{Debug},
     	Peek     => 1,
-    	) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF');
+    	) or die "Cant open $emc email account: ". ($config_data->{connection}->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{connection}->{$emc}->{Username}//'__UNDEF');
 
     	say $imap->Rfc3501_datetime(time()) if defined $imap;
 
