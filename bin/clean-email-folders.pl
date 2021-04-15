@@ -44,7 +44,7 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
 
  sub main {
     my $self = shift;
-    my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
+    my $CONFIGFILE = $ENV{HOME} . '/etc/email2.yml';
     my $config_data;
 
     eval {
