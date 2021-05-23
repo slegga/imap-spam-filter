@@ -12,5 +12,7 @@ blocked:
       from_not_like: netflix.(com|no)$
     -
       subject_like: deilig[\s_]sex
+    -
+      body_like: dating
   expiration_days: 0
   move_to: INBOX.Spam

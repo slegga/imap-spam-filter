@@ -240,6 +240,7 @@ sub main {
             my $text = $imap->message_string($uid);
             if (my $re = $self->regexp) {
                 next if $text !~ /$re/;
+                $DB::single=2;
             }
             my $email_h = $convert->msgtext2hash($text);
 
