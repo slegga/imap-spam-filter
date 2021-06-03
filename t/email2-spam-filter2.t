@@ -20,7 +20,7 @@ my $to = Object->new(configfile=>'t/config/email2.yml', debug=>1);
 my $result = $to->main({configfile=>'t/config/email2.yml', testing=>1}); #,iterations=>1,mode=>'mocked'
 my @spam_emails = sort @{$result->{'INBOX.Spam'}};
 say ".";
-is_deeply \@spam_emails, [ 't/email-folder/lisa-sex.txt','t/email-folder/phishing.txt'  ],'Correct moving';
+is_deeply \@spam_emails, [ 't/email-folder/base64-problem2.txt','t/email-folder/lisa-sex.txt','t/email-folder/phishing.txt'  ],'Correct moving';
 # 't/email-folder/base64-problem2.txt',
 say ".";
 
