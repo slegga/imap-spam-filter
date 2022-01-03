@@ -333,6 +333,18 @@ sub main {
                                 $action{$uid}{reason} .= $v.' '. $1. "=~". $qr;
                                 $hit=1;
                             } else { $hit=0;last }
+                        } elsif ($v eq 'body_not_like') {
+                            my $qr = qr/($crit->{$v})/;
+                            if (! exists $email_h->{body}->{content}) {
+                                $hit=1;
+                            }
+                            elsif (! $email_h->{body}->{content}) {
+                                $hit=1;
+                            }
+                            elsif ($email_h->{body}->{content} =~ /$qr/) {
+                                $action{$uid}{reason} .= $v.' '. $1. "=~". $qr;
+                                $hit=0; last;
+                            } else { $hit=1 }
                         } elsif ($v eq 'subject_like') {
                             my $qr = qr/($crit->{$v})/;
 
@@ -345,13 +357,6 @@ sub main {
 
                             if ($email_h->{header}->{Subject} && $email_h->{header}->{Subject} !~ /$qr/) {
                                 $action{$uid}{reason} .= $v.' '. ($1//'');
-                                $hit=1;
-                            } else { $hit=0;last }
-                        } elsif ($v eq 'subject_like') {
-                            my $qr = qr/($crit->{$v})/;
-
-                            if ($email_h->{header}->{Subject} && $email_h->{header}->{Subject} =~ /$qr/) {
-                                $action{$uid}{reason} .= $v.' '. $1;
                                 $hit=1;
                             } else { $hit=0;last }
                         } elsif ($v =~ /(.+)_contain$/) {
