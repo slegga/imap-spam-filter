@@ -82,7 +82,6 @@ X-FE-Attachment-Name: 18.jpg
 Authentication-Results: nmspam1.e.nsc.no;
 	spf=pass (nsc.no: domain of yvonnedavis851@hotmail.com designates 40.92.90.11 as permitted sender) smtp.mailfrom=yvonnedavis851@hotmail.com
 X-FE-Policy-ID: 0:1:3:SYSTEM
-X-Telenor_id: 1704961707
 X-XClient-IP-Addr: 40.92.90.11
 X-Source-IP: 40.92.90.11
 X-Scanned-By: MIMEDefang 2.84 on 10.123.160.164

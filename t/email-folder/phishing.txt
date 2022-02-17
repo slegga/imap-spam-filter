@@ -28,7 +28,6 @@ Authentication-Results: nmspam1.e.nsc.no;
 X-FEAS-Deferred: Spam outbreak
 X-FE-Policy-ID: 0:1:3:SYSTEM
 Message-Id: <20201219131100.E742A1983A0@nmmx7.e.nsc.no>
-X-Telenor_id: E742A1983A0
 X-XClient-IP-Addr: 185.56.170.98
 X-Source-IP: 185.56.170.98
 X-Scanned-By: MIMEDefang 2.84 on 10.123.160.166
