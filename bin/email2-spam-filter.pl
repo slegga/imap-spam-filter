@@ -280,8 +280,13 @@ sub main {
                 $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
             }
             # delay remove of ads only on dates not datetimes
-            my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1];
+            my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1]//$email_h->{header}->{Date};
 #            warn $res;
+            if (!$res) {
+                say Dumper $email_h->{header};
+                die "Missing date";
+            }
+
             $res =~s/^[\W]+//;
             $res =~s /\s*\(\w+\)$//;
             eval {
