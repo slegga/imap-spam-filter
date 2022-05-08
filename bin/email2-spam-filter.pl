@@ -333,7 +333,6 @@ sub main {
                                 $action{$uid}{reason} .= join (' ',$v,$email_h->{header}->{From},'=~', $crit->{$v});
                                 $hit=1;
                             } else { $hit=0;last }
-                        }
                         } elsif ($v eq 'body_like') {
                             my $qr = qr/($crit->{$v})/;
                             if (! exists $email_h->{body}->{content}) {
