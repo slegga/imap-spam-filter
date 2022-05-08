@@ -329,9 +329,22 @@ sub main {
                         } elsif($v eq 'from_full_like') {
 
                             my $qr = qr($crit->{$v});
-                            if ($email_h->{header}->{From} =~ /$qr/) {
+
+                            if (! ref $email_h->{header}->{From} && $email_h->{header}->{From} =~ /$qr/) {
                                 $action{$uid}{reason} .= join (' ',$v,$email_h->{header}->{From},'=~', $crit->{$v});
                                 $hit=1;
+                            }
+                            elsif (ref $email_h->{header}->{From} eq 'ARRAY') {
+                                my $xhit=0;
+                                for my $f(@{$email_h->{header}->{From}}) {
+                                    if ($f =~ /$qr/) {
+                                        $action{$uid}{reason} .= join (' ',$v,$f,'=~', $crit->{$v});
+                                        $hit=1;
+                                        $xhit=1;
+                                        last;
+                                    }
+                                }
+                                if ($xhit == 0 ) {$hit=0;last}
                             } else { $hit=0;last }
                         } elsif ($v eq 'body_like') {
                             my $qr = qr/($crit->{$v})/;
