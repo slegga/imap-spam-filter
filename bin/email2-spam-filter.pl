@@ -322,7 +322,7 @@ sub main {
                             } else { $hit=0;last }
                         } elsif ($v eq 'from_not_like') {
                             my $qr = qr($crit->{$v});
-                            if ($email_h->{calculated}->{from} !~ /$qr/) {
+                            if ($email_h->{calculated}->{from} !~ /$qr/i) {
                                 $action{$uid}{reason} .= join (' ',$v,$email_h->{calculated}->{from},'!~', $crit->{$v});
                                 $hit=1;
                             } else { $hit=0;last }
