@@ -329,14 +329,19 @@ sub main {
                         } elsif($v eq 'from_full_like') {
 
                             my $qr = qr($crit->{$v});
-
-                            if (! ref $email_h->{header}->{From} && $email_h->{header}->{From} =~ /$qr/) {
-                                $action{$uid}{reason} .= join (' ',$v,$email_h->{header}->{From},'=~', $crit->{$v});
-                                $hit=1;
+                            my $from = $email_h->{header}->{From} || $email_h->{header}->{'Return-Path'} || $email_h->{header}->{'Reply-To'};
+                            if ( ! ref $from ) {
+                                if(! $from ) {
+                                    say "TAGX ".Dumper $email_h;
+                                }
+                                 elsif ( $from =~ /$qr/ ) {
+                                    $action{$uid}{reason} .= join (' ',$v,$from,'=~', $crit->{$v});
+                                    $hit=1;
+                                }
                             }
-                            elsif (ref $email_h->{header}->{From} eq 'ARRAY') {
+                            elsif (ref $from eq 'ARRAY') {
                                 my $xhit=0;
-                                for my $f(@{$email_h->{header}->{From}}) {
+                                for my $f( @$from ) {
                                     if ($f =~ /$qr/) {
                                         $action{$uid}{reason} .= join (' ',$v,$f,'=~', $crit->{$v});
                                         $hit=1;
