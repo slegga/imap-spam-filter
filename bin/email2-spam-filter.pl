@@ -351,6 +351,17 @@ sub main {
                                 }
                                 if ($xhit == 0 ) {$hit=0;last}
                             } else { $hit=0;last }
+                        } elsif ($v eq 'to_full_like') {
+                            my $qr = qr($crit->{$v});
+                            my $to = $email_h->{header}->{To};
+                            if (! $to) {
+                                warn Dumper $email_h->{header};
+                                die;
+                            }
+                            if ( $to =~ /$qr/ ) {
+                                $action{$uid}{reason} .= join (' ',$v,$to,'=~', $crit->{$v});
+                                $hit=1;
+                            }
                         } elsif ($v eq 'body_like') {
                             my $qr = qr/($crit->{$v})/;
                             if (! exists $email_h->{body}->{content}) {
