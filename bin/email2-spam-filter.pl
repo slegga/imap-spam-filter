@@ -275,7 +275,10 @@ sub main {
                 }
             }
             $prev_email_h = clone $email_h;
-            {
+            if (! $email_h) {
+                die '$email is not defined';
+            }
+             {
                 my $from = $email_h->{header}->{From} || $email_h->{header}->{'Return-Path'} || $email_h->{header}->{'Reply-To'};
                 $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
             }
