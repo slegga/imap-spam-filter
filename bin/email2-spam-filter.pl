@@ -359,7 +359,9 @@ sub main {
                             my $to = $email_h->{header}->{To};
                             if (! $to) {
                                 warn Dumper $email_h->{header};
-                                die;
+                                # skolemelding have emails with no to
+                                $to='';
+#                                die;
                             }
                             if ( $to =~ /$qr/ ) {
                                 $action{$uid}{reason} .= join (' ',$v,$to,'=~', $crit->{$v});
