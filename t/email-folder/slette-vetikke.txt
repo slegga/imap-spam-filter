@@ -5,7 +5,7 @@ Received: from nmspam2.e.nsc.no (nmspam2.e.nsc.no [148.123.163.133])
 	 key-exchange ECDHE (P-384) server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	by nmmx8.e.nsc.no (mx.online.no) with ESMTPS id D592357367
-	for <steihamm@online.no>; Sun, 26 Jun 2022 17:52:42 +0200 (CEST)
+	for <bkglgnsklnf@onkari.no>; Sun, 26 Jun 2022 17:52:42 +0200 (CEST)
 Authentication-Results: nmspam2.e.nsc.no;
 	spf=pass (nsc.no: domain of 6xhdw05y4o4co@betorn.thecist.com designates 77.83.247.141 as permitted sender) smtp.mailfrom=6xhdw05y4o4co@betorn.thecist.com
 Received: from betorn.thecist.com (betorn.thecist.com [77.83.247.141])
@@ -65,7 +65,6 @@ X-Scan-TS: Sun, 26 Jun 2022 11:52:32 -0400
 X-FE-Last-Public-Client-IP: 77.83.247.141
 X-FE-Envelope-From: 6xhdw05y4o4co@betorn.thecist.com
 X-FEAS-Spam-outbreak: monitor-only
-X-Telenor_id: D592357367
 X-XClient-IP-Addr: 77.83.247.141
 X-Source-IP: 77.83.247.141
 X-Scanned-By: MIMEDefang 2.84 on 10.123.160.167

@@ -5,7 +5,7 @@ Received: from nmspam1.e.nsc.no (nmspam1.e.nsc.no [148.123.163.132])
 	 key-exchange ECDHE (P-384) server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	by nmmx8.e.nsc.no (mx.online.no) with ESMTPS id 1B4B157404
-	for <steihamm@online.no>; Sun, 26 Jun 2022 11:53:39 +0200 (CEST)
+	for <stfffg@ofnline.no>; Sun, 26 Jun 2022 11:53:39 +0200 (CEST)
 Authentication-Results: nmspam1.e.nsc.no;
 	spf=pass (nsc.no: domain of tv0yg4jq0bmbs9@qualyac.com designates 95.211.140.204 as permitted sender) smtp.mailfrom=tv0yg4jq0bmbs9@qualyac.com
 Received: from qualyac.com (qualyac.com [95.211.140.204])
@@ -39,7 +39,6 @@ Content-Type: multipart/mixed;
 X-FE-Last-Public-Client-IP: 95.211.140.204
 X-FE-Envelope-From: tv0yg4jq0bmbs9@qualyac.com
 X-FEAS-Spam-outbreak: monitor-only
-X-Telenor_id: 1B4B157404
 X-XClient-IP-Addr: 95.211.140.204
 X-Source-IP: 95.211.140.204
 X-Scanned-By: MIMEDefang 2.84 on 10.123.160.167
