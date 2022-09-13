@@ -358,7 +358,7 @@ sub main {
                             my $qr = qr($crit->{$v});
                             my $to = $email_h->{header}->{To};
                             if (! $to) {
-                                warn Dumper $email_h->{header};
+#                                warn Dumper $email_h->{header};
                                 # skolemelding have emails with no to
                                 $to='';
 #                                die;
