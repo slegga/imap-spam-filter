@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
 
-use Mojo::Base -strict;
 use Mail::IMAPClient;
 use Carp;
 use YAML::Tiny;
@@ -29,7 +28,6 @@ use Mojo::SQLite::Migrations;
 use FindBin;
 use Mojo::File;
 use Test::Mail::IMAPClient;
-no warnings qw(experimental::signatures);
 
 binmode STDOUT, ':encoding(UTF-8)';
 binmode STDIN, ':encoding(UTF-8)';
@@ -54,7 +52,7 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
 
 
 has 'configfile'=> $ENV{HOME} . '/etc/email2.yml';
-
+$DB::single=2;
 # calculate rule order for sort. Return a value for sorting
 sub orderval {
     my  ($self, $rule_hr) = @_;
@@ -103,13 +101,17 @@ sub main {
     $db = $sqlite->db;
 
     eval {
+        local $/='';
+        open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
+        my $content = <$FH>;
 
-    open my $FH, '< :encoding(UTF-8)', $CONFIGFILE or die "Failed to read $CONFIGFILE: $!";
-        $config_data = YAML::Tiny::Load(
-            do { local $/; <$FH> }
-        );    # slurp content
+        if ( $content) { # enable empty content when testing
+            $config_data = YAML::Tiny::Load( $content );    # slurp content
+        } else {
+            die "Empty file $CONFIGFILE";
+        }
     } or do {
-        confess $@;
+        confess "Error reading $CONFIGFILE. $@ $!";
     };
 
     if($ENV{MOCK} ) {
