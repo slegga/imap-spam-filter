@@ -62,7 +62,7 @@ sub orderval {
         my $last={};
         for my $i(reverse 0 .. $#{$rule_hr->{criteria}}) {
             $last = $rule_hr->{criteria}->[$i];
-            last if (keys %$last)[0] ne 'ip_address_in' && (keys %$last)[0] ne 'X-XClient-IP-Addr_contain' ;
+            last if grep {(keys %$last)[0] eq $_} qw 'ip_address_in X-XClient-IP-Addr_contain Content-Type_contain From_contain' ;
         }
         say "Last criteria: ". j($last);
         die "Probably running line in yaml file";
