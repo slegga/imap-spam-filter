@@ -58,7 +58,7 @@ $DB::single=2;
 sub orderval {
     my  ($self, $rule_hr) = @_;
     if (! exists $rule_hr->{expiration_days}) {
-        say j($rule_hr);
+#        say j($rule_hr);
         my $last={};
         for my $i(reverse 0 .. $#{$rule_hr->{criteria}}) {
             $last = $rule_hr->{criteria}->[$i];
