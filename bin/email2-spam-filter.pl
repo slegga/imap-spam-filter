@@ -59,6 +59,11 @@ sub orderval {
     my  ($self, $rule_hr) = @_;
     if (! exists $rule_hr->{expiration_days}) {
         say j($rule_hr);
+        my $last={};
+        for my $i(reverse 0 .. $#{$rule_hr->{criteria}}) {
+            $last = $rule_hr->{criteria}->[$i];
+            last if (keys %$last)[0] ne 'ip_address_in' && (keys %$last)[0] ne 'X-XClient-IP-Addr_contain' ;
+        }
         say "Last criteria: ". j($rule_hr->{criteria}->[$#{$rule_hr->{criteria}}]) if exists $rule_hr->{criteria};
         die "Probably running line in yaml file";
     }
