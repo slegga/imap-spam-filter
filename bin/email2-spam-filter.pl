@@ -28,6 +28,7 @@ use Mojo::SQLite::Migrations;
 use FindBin;
 use Mojo::File;
 use Test::Mail::IMAPClient;
+use Mojo::JSON 'j';
 
 binmode STDOUT, ':encoding(UTF-8)';
 binmode STDIN, ':encoding(UTF-8)';
@@ -56,7 +57,12 @@ $DB::single=2;
 # calculate rule order for sort. Return a value for sorting
 sub orderval {
     my  ($self, $rule_hr) = @_;
-    my $return  = ($rule_hr->{expiration_days}//0) * 10000;
+    if (! exists $rule_hr->{expiration_days}) {
+        say j($rule_hr);
+        say "Last criteria: ". j($rule_hr->{criteria}->[$#{$rule_hr->{criteria}}]) if exists $rule_hr->{criteria};
+        die "Probably running line in yaml file";
+    }
+    my $return  = $rule_hr->{expiration_days} * 10000;
     $return -= 10 if exists $rule_hr->{whitelist};
     if (exists $rule_hr->{move_to}) {
         $return += 10;
@@ -235,7 +241,7 @@ sub main {
         my $prefix =   $config_data->{connection}->{$emc}->{weekword}|| 'Melding fra ';
 
         #MAIN LOOP
-        my @rules = sort{$self->orderval($config_data->{$b}) <=> $self->orderval($config_data->{$a})}  keys %$config_data;
+        my @rules = sort{$self->orderval($config_data->{$b}) <=> $self->orderval($config_data->{$a})} grep {$_ ne 'connection'}  keys %$config_data;
 
         for my $uid(@all) {
             my $next = 0;
