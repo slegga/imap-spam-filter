@@ -56,7 +56,7 @@ $DB::single=2;
 # calculate rule order for sort. Return a value for sorting
 sub orderval {
     my  ($self, $rule_hr) = @_;
-    my $return  = $rule_hr->{expiration_days} * 10000;
+    my $return  = ($rule_hr->{expiration_days}//0) * 10000;
     $return -= 10 if exists $rule_hr->{whitelist};
     if (exists $rule_hr->{move_to}) {
         $return += 10;
@@ -67,7 +67,7 @@ sub orderval {
     for my $crit (@{ $rule_hr->{criteria} }) {
         $return += 1 if grep {$_ =~/\_(contain|in|like)$/} keys %$crit;
     }
-    return  $return;
+    return  $return//0;
 }
 
 sub main {
@@ -235,7 +235,7 @@ sub main {
         my $prefix =   $config_data->{connection}->{$emc}->{weekword}|| 'Melding fra ';
 
         #MAIN LOOP
-        my @rules = sort{$self->orderval($config_data->{$b}) <=> $self->orderval($config_data->{$a})}  grep {exists $config_data->{$_}->{expiration_days}} keys %$config_data;
+        my @rules = sort{$self->orderval($config_data->{$b}) <=> $self->orderval($config_data->{$a})}  keys %$config_data;
 
         for my $uid(@all) {
             my $next = 0;
