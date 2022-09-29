@@ -241,6 +241,7 @@ sub main {
             my $next = 0;
             my $text = $imap->message_string($uid);
             if (my $re = $self->regexp) {
+                next if ! $text;
                 next if $text !~ /$re/;
                 $DB::single=2;
             }
