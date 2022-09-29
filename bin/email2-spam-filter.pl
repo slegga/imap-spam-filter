@@ -310,7 +310,7 @@ sub main {
             for my $rule( @rules ) {
                 next if $rule eq 'connection';
                 last if $next==1;
-                my $dt = time - $config_data->{$rule}->{expiration_days} * 24 *60 *60;
+                my $dt = time - ($config_data->{$rule}->{expiration_days}//0) * 24 *60 *60;
                 next if ($dt < $email_h->{calculated}->{received});
                 for my $crit (@{ $config_data->{$rule}->{criteria} }) {
                     my $hit = 0;
