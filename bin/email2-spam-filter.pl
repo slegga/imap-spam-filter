@@ -64,7 +64,7 @@ sub orderval {
             $last = $rule_hr->{criteria}->[$i];
             last if (keys %$last)[0] ne 'ip_address_in' && (keys %$last)[0] ne 'X-XClient-IP-Addr_contain' ;
         }
-        say "Last criteria: ". j($rule_hr->{criteria}->[$#{$rule_hr->{criteria}}]) if exists $rule_hr->{criteria};
+        say "Last criteria: ". j($last);
         die "Probably running line in yaml file";
     }
     my $return  = $rule_hr->{expiration_days} * 10000;
