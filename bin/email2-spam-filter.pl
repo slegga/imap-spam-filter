@@ -272,7 +272,7 @@ sub main {
                     };
                 }
                  my ($dmarc_failed) = grep {exists $_->{h} && exists $_->{h}->{dmarc} && $_->{h}->{dmarc} =~ /^fail/} @{ $email_h->{header}->{'Authentication-Results'}};
-                 if ($dmarc_failed) {
+                 if (defined $dmarc_failed && $dmarc_failed) {
                     $action{$email_h->{uid}} = {
                         reason => "$dmarc_failed",
                         rule => "dmarc=failed",
