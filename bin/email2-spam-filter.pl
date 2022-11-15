@@ -271,6 +271,16 @@ sub main {
                         email_name => "$email_h->{Subject}",
                     };
                 }
+                 my ($dmarc_failed) = grep {exists $_->{h} && exists $_->{h}->{dmarc} && $_->{h}->{dmarc} =~ /^fail/} @{ $email_h->{header}->{'Authentication-Results'}};
+                 if ($dkim_failed) {
+                    $action{$email_h->{uid}} = {
+                        reason => "$dmarc_failed",
+                        rule => "dmarc=failed",
+                        action =>'move_to',
+                        folder=>'INBOX.Spam',
+                        email_name => "$email_h->{Subject}",
+                    };
+                }
             }
 
 
