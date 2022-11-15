@@ -272,10 +272,22 @@ sub main {
                     };
                 }
                  my ($dmarc_failed) = grep {exists $_->{h} && exists $_->{h}->{dmarc} && $_->{h}->{dmarc} =~ /^fail/} @{ $email_h->{header}->{'Authentication-Results'}};
-                 if ($dkim_failed) {
+                 if ($dmarc_failed) {
                     $action{$email_h->{uid}} = {
                         reason => "$dmarc_failed",
                         rule => "dmarc=failed",
+                        action =>'move_to',
+                        folder=>'INBOX.Spam',
+                        email_name => "$email_h->{Subject}",
+                    };
+                }
+            }
+            if (exists $email_h->{header}->{'ARC-Authentication-Results'} && ref $email_h->{header}->{'ARC-Authentication-Results'} eq 'HASH' && exists $email_h->{header}->{'ARC-Authentication-Results'}->{h}->{dkim} ) {
+                 my ($dmarc_dkim) = $email_h->{header}->{'ARC-Authentication-Results'}->{h}->{dkim};
+                 if ($dmarc_dkim=~/^failed/) {
+                    $action{$email_h->{uid}} = {
+                        reason => "$dmarc_dkim",
+                        rule => "dmarc/dkim=failed",
                         action =>'move_to',
                         folder=>'INBOX.Spam',
                         email_name => "$email_h->{Subject}",
