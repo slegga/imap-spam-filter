@@ -263,8 +263,14 @@ sub main {
             if (exists $email_h->{header}->{'Authentication-Results'} && ref $email_h->{header}->{'Authentication-Results'} eq 'ARRAY' ) {
                  my ($dkim_failed) = grep {exists $_->{h} && exists $_->{h}->{dkim} && $_->{h}->{dkim} =~ /^fail/} @{ $email_h->{header}->{'Authentication-Results'}};
                  if ($dkim_failed) {
-                    $action{$email_h->{uid}} = { rule=>"DKIM=failed: ".$dkim_failed,  email_name => $email_h->{Subject}};
-                 }
+                    $action{$email_h->{uid}} = {
+                        reason => "$dkim_failed",
+                        rule => "DKIM=failed",
+                        action =>'move_to',
+                        folder=>'INBOX.Spam',
+                        email_name => "$email_h->{Subject}",
+                    };
+                }
             }
 
 
@@ -278,7 +284,7 @@ sub main {
                 && $prev_email_h->{header}->{'Return-Path'}     eq $email_h->{header}->{'Return-Path'}  ) {
                     my $move_uid;
                     $move_uid = $prev_email_h->{calculated}->{size} > $email_h->{calculated}->{size} ? $email_h->{uid} : $prev_email_h->{uid};
-                    $action{$move_uid} = {rule=>"MOVE DUPLICATE ", action =>'move_to',folder=>'INBOX.Spam', email_name=>$prev_email_h->{header}->{Subject} };
+                    $action{$move_uid} = {reason=>'duplicate', rule=>"MOVE DUPLICATE ", action =>'move_to',folder=>'INBOX.Spam', email_name=>$prev_email_h->{header}->{Subject} };
                 }
 
                 #remove old weeks
@@ -290,7 +296,7 @@ sub main {
                        # Try to handle new year
                        $week_diff -=52 if ( 47< $week_diff && $week_diff < 57  ) ;
                        if ($week_diff >0 && $week_diff < 5) {
-                           $action{$email_h->{uid}} ={ rule=>"MOVE PASSED WEEK ",  email_name => $email_h->{Subject}};
+                           $action{$email_h->{uid}} ={ reason=>'Move passed week',rule=>"MOVE PASSED WEEK ",  email_name => $email_h->{Subject}};
                        }
                    }
                 }
