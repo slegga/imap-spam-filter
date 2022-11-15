@@ -260,6 +260,13 @@ sub main {
 
             $email_h->{calculated}->{size} = $imap->size($uid);
             $email_h->{uid}=$uid;
+            if (exists $email_h->{header}->{'Authentication-Results'} && ref $email_h->{header}->{'Authentication-Results'} eq 'ARRAY' ) {
+                 my ($dkim_failed) = grep {exists $_->{h} && exists $_->{h}->{dkim} && $_->{h}->{dkim} =~ /^fail/} @{ $email_h->{header}->{'Authentication-Results'}};
+                 if ($dkim_failed) {
+                    $action{$email_h->{uid}} = { rule=>"DKIM=failed: ".$dkim_failed,  email_name => $email_h->{Subject}};
+                 }
+            }
+
 
             # Remove duplicated emails
             if ($prev_email_h && $email_h) {
