@@ -336,6 +336,7 @@ sub main {
 #            warn $res;
             if (!$res) {
                 say Dumper $email_h->{header};
+                say Dumper $email_h;
                 die "Missing date";
             }
 
@@ -475,6 +476,13 @@ sub main {
                                 $action{$uid}{reason} .= join(' ',$v,$ip,'part of',$slice);
                                 $hit=1;
                             } else { $hit=0;last }
+                        } elsif ($v eq 'header_content_like') {
+                            my $qr = qr/($crit->{$v})/;
+
+                            if ($email_h->{header}->{content} && $email_h->{header}->{content} =~ /$qr/) {
+                                $action{$uid}{reason} .= $v.' '. ($1//'');
+                                $hit=1;
+                            }
                         } else {
                             die "Unsupported keyword $v at $rule ".Dump $crit;
                         }
