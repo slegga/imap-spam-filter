@@ -93,7 +93,7 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
             if (grep {$_ eq $trash_f} @folders) {
             	$imap->select($trash_f);
                 my @all = sort {$a <=> $b} $imap->search('ALL');
-                pop (@all) for(0 .. 200);
+                pop (@all) for(0 .. 170);
                 next if !@all;
                 printf "%s %s\n", $trash_f, scalar @all;
                 $imap->delete_message(\@all)or warn "Could not delete_messages: $@\n" # for @all;
@@ -106,7 +106,7 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
             if (grep {$_ eq $trash_f} @folders) {
             	$imap->select($trash_f);
                 my @all = sort {$a <=> $b} $imap->search('ALL');
-                pop (@all) for(0 .. 450);
+                pop (@all) for(0 .. 400);
                 next if !@all;
                 printf "%s %s\n", $trash_f, scalar @all;
                 $imap->delete_message(\@all)or warn "Could not delete_messages: $@\n" # for @all;
@@ -119,7 +119,7 @@ option 'server=s', 'regexp på server name, for running only one or few not all'
             if (grep {$_ eq $trash_f} @folders) {
             	$imap->select($trash_f);
                 my @all = sort {$a <=> $b} $imap->search('ALL');
-                pop (@all) for(0 .. 1900);
+                pop (@all) for(0 .. 1650);
                 next if !@all;
                 printf "%s %s\n", $trash_f, scalar @all;
                 $imap->delete_message(\@all)or warn "Could not delete_messages: $@\n" # for @all;
