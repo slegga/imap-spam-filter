@@ -29,6 +29,8 @@ use FindBin;
 use Mojo::File;
 use Test::Mail::IMAPClient;
 use Mojo::JSON 'j';
+use Data::Printer;
+
 
 binmode STDOUT, ':encoding(UTF-8)';
 binmode STDIN, ':encoding(UTF-8)';
@@ -294,6 +296,19 @@ sub main {
                     };
                 }
             }
+            if (exists $email_h->{header}->{'Authentication-Results'} && ref $email_h->{header}->{'Authentication-Results'} eq 'HASH' && exists $email_h->{header}->{'Authentication-Results'}->{h}->{spf} ) {
+                 my ($spf) = $email_h->{header}->{'Authentication-Results'}->{h}->{spf};
+                 if ($spf=~/^fail/) {
+                    $action{$email_h->{uid}} = {
+                        reason => "$spf",
+                        rule => "spf=fail",
+                        action =>'move_to',
+                        folder=>'INBOX.Spam',
+                        email_name => "$email_h->{Subject}",
+                    };
+                }
+            }
+
 
 
             # Remove duplicated emails
@@ -332,10 +347,13 @@ sub main {
                 $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
             }
             # delay remove of ads only on dates not datetimes
-            if (! ref $email_h->{header}->{Received}->[0]->{a} eq 'ARRAY') {
-                p $email_h;
-                die '! ref $email_h->{header}->{Received}->[0]->{a} eq ARRAY' . (ref $email_h->{header}->{Received}->[0]->{a}//'SCALAR') ;
-            }
+            if (ref $email_h->{header}->{Received} ne 'ARRAY') {
+                my $move_uid;
+                $move_uid = $email_h->{uid};
+                $action{$move_uid} = {reason=>'Malformed {header}->{Received}', rule=>"MOVE MALFORMED HEADER DATE", action =>'move_to',folder=>'INBOX.Spam', email_name=>$prev_email_h->{header}->{Subject} };
+		$email_h->{header}->{Received}=[];
+		$email_h->{header}->{Received}->[0]->{a}->[1] = " Mon, 16 Jan 2000 16:00:21 +0100";
+	    }
             my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1]//$email_h->{header}->{Date};
 #            warn $res;
             if (!$res) {
