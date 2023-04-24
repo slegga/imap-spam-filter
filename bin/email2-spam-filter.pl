@@ -332,6 +332,10 @@ sub main {
                 $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
             }
             # delay remove of ads only on dates not datetimes
+            if (! ref $email_h->{header}->{Received}->[0]->{a} eq 'ARRAY') {
+                p $email_h;
+                die '! ref $email_h->{header}->{Received}->[0]->{a} eq ARRAY' . (ref $email_h->{header}->{Received}->[0]->{a}//'SCALAR') ;
+            }
             my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1]//$email_h->{header}->{Date};
 #            warn $res;
             if (!$res) {

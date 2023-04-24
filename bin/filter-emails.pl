@@ -12,6 +12,7 @@ use open ':encoding(UTF-8)';
 use Mail::IMAPClient;
 use SH::Email::ToHash;
 use Data::Dumper;
+use Data::Printer;
 #use Carp::Always;
 
 =head1 NAME
@@ -47,7 +48,7 @@ option 'info!',    'Show info';
  sub main {
     my $self = shift;
     my ($command,@e) = @{ $self->extra_options };
-    my $CONFIGFILE = $ENV{HOME} . '/etc/email.yml';
+    my $CONFIGFILE = $ENV{HOME} . '/etc/email2.yml';
     my $config_data;
 
     eval {
@@ -58,20 +59,37 @@ option 'info!',    'Show info';
     } or do {
         confess $@;
     };
-    for my $emc( grep {ref $config_data->{$_} eq 'HASH'} keys %$config_data) {
-        if  ($self->server) {
+    p $config_data;
+     for my $emc( grep {ref $config_data->{connection}->{$_} eq 'HASH'} keys %{ $config_data->{connection} }) {
+       if  ($self->server) {
             my $s = $self->server;
             next if $emc!~/$s/;
         }
-        my $imap = Mail::IMAPClient->new(
-        Server   => $config_data->{$emc}->{Server},
-        User     => $config_data->{$emc}->{Username},
-        Password => $config_data->{$emc}->{Password},
-        Ssl      => $config_data->{$emc}->{Ssl},
-        Uid      => $config_data->{$emc}->{Uid},
-        Debug    => $config_data->{$emc}->{Debug},
-        Peek     => 1,
-        ) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF');
+        p $emc;
+        my %connect =(
+        Server   => $config_data->{connection}->{$emc}->{Server},
+    	User     => $config_data->{connection}->{$emc}->{Username},
+    	Password => $config_data->{connection}->{$emc}->{Password},
+    	Ssl      => $config_data->{connection}->{$emc}->{Ssl},
+    	Uid      => $config_data->{connection}->{$emc}->{Uid},
+    	Debug    => $config_data->{connection}->{$emc}->{Debug},
+    	Peek     => 1,);
+
+#say Dumper \%connect;
+    	my $imap;
+    	if(!$connect{Server}) {
+    	    p %connect;
+#    	    p $config_data;
+    	    die;
+    	}
+    	elsif($connect{Server} eq 'files') {
+    	    $connect{$_} = $config_data->{connection}->{$emc}->{$_} for (keys %{$config_data->{connection}->{$emc}});
+    	    $imap = Test::Mail::IMAPClient->new(%connect);
+    	}
+    	else {
+    	    $imap = Mail::IMAPClient->new(%connect) or die "Cant open $emc email account: ". ($config_data->{$emc}->{Server}//'__UNDEF__'). ' User: ' . ($config_data->{$emc}->{Username}//'__UNDEF')."ERROR: $@";
+        }
+    	say $imap->Rfc3501_datetime(time()) if defined $imap;
 
         $imap->select( $self->folder );
 
