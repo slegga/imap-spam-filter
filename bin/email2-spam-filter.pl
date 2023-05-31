@@ -270,8 +270,7 @@ sub main {
                         rule => "DKIM=failed",
                         action =>'move_to',
                         folder=>'INBOX.Spam',
-                        email_name => "$email_h->{Subject}",
-                    };
+                        email_name => $email_h->{Subject} || $email_h->{header}->{Subject},                    };
                 }
                  my ($dmarc_failed) = grep {exists $_->{h} && exists $_->{h}->{dmarc} && $_->{h}->{dmarc} =~ /^fail/} @{ $email_h->{header}->{'Authentication-Results'}};
                  if (defined $dmarc_failed && $dmarc_failed) {
@@ -280,7 +279,7 @@ sub main {
                         rule => "dmarc=failed",
                         action =>'move_to',
                         folder=>'INBOX.Spam',
-                        email_name => "$email_h->{Subject}",
+                        email_name => $email_h->{Subject} || $email_h->{header}->{Subject},
                     };
                 }
             }
@@ -346,18 +345,21 @@ sub main {
                 my $from = $email_h->{header}->{From} || $email_h->{header}->{'Return-Path'} || $email_h->{header}->{'Reply-To'};
                 $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
             }
-            # delay remove of ads only on dates not datetimes
-#            if (ref $email_h->{header}->{Received} ne 'ARRAY') {
-#                my $move_uid;
-#                $move_uid = $email_h->{uid};
-#                $action{$move_uid} = {reason=>'Malformed {header}->{Received}', rule=>"MOVE MALFORMED HEADER DATE", action =>'move_to',folder=>'INBOX.Spam', email_name=>$prev_email_h->{header}->{Subject} };
-#		$email_h->{header}->{Received}=[];
-#		$email_h->{header}->{Received}->[0]->{a}->[1] = " Mon, 16 Jan 2000 16:00:21 +0100";
-#	    }
-            my ($res) = $email_h->{header}->{Received}->[0]->{a}->[1]//$email_h->{header}->{Date};
-#            warn $res;
+
+            my $res;
+            if (ref $email_h->{header}->{Received} eq 'HASH') {
+                $res = $email_h->{header}->{Received}->{a}->[1];
+            }
+            else {
+                $res = $email_h->{header}->{Received}->[0]->{a}->[1];
+            }
+            if (! $res ) {
+                $res = $email_h->{header}->{Date}//$email_h->{Date};
+            }
+
             if (!$res) {
                 say Dumper $email_h->{header};
+                say '--------------------------------------------------------';
                 say Dumper $email_h;
                 die "Missing date";
             }
