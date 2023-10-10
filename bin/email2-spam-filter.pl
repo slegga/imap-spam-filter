@@ -357,6 +357,11 @@ sub main {
                 $res = $email_h->{header}->{Date}//$email_h->{Date};
             }
 
+            if (! $res ) {
+                ($res) = grep {$_ =~ /^Date\:/} split /\n/,$email_h->{header}->{content}; # corps Kristin email
+                $res =~ s/^Date: //;
+            }
+
             if (!$res) {
                 say Dumper $email_h->{header};
                 say '--------------------------------------------------------';
