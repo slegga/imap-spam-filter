@@ -216,6 +216,9 @@ sub main {
         for my $uid(@all) {
             my $text = $imap->message_string($uid);
             my $email_h = $convert->msgtext2hash($text);
+            if (length $email_h->{body}->{content} > 000) {
+                $email_h->{body}->{content} = substr($email_h->{body}->{content},0,3000);
+            }
             my @emails=();
             if ($email_h->{header}->{To}) {
                 @emails = map {$convert->extract_emailaddress($_)} split(/[\,]\s*/, $email_h->{header}->{To});
