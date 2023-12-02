@@ -342,7 +342,7 @@ sub main {
                 die '$email is not defined';
             }
              {
-                my $from = $email_h->{header}->{From} || $email_h->{header}->{'Return-Path'} || $email_h->{header}->{'Reply-To'};
+                my $from = $email_h->{header}->{From} || $email_h->{header}->{'Return-Path'} || $email_h->{header}->{'Reply-To'} || $email_h->{header}->{'X-Authenticated-User'};
                 $email_h->{calculated}->{from} = $convert->extract_emailaddress($from)  or next;
             }
 
