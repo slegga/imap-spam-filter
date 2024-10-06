@@ -280,15 +280,31 @@ sub main {
 
         for my $uid (@all) {
             my $next = 0;
-            my $text = $imap->message_string($uid);
+            my $text;
+            eval {
+                $text = $imap->message_string($uid);
+                1;
+            } or do {
+                warn $@;
+                ...;
+            };
+
             if (my $re = $self->regexp) {
                 next if !$text;
                 next if $text !~ /$re/;
                 $DB::single = 2;
             }
             my $email_h = $convert->msgtext2hash($text);
+            eval {
+                $email_h->{calculated}->{size} = $imap->size($uid);
+            };
+            if($@) {
+                warn "Error with imap";
+                warm $@;
+                p $imap;
+                ...;
 
-            $email_h->{calculated}->{size} = $imap->size($uid);
+            }
             $email_h->{uid} = $uid;
             if (exists $email_h->{header}->{'Authentication-Results'}
                 && ref $email_h->{header}->{'Authentication-Results'} eq 'ARRAY') {
@@ -316,6 +332,15 @@ sub main {
                         email_name => $email_h->{Subject} || $email_h->{header}->{Subject},
                     };
                 }
+            }
+            if (   exists $email_h->{header}->{error_header} && $email_h->{header}->{error_header}) {
+                $action{$email_h->{uid}} = {
+                    reason     => $email_h->{header}->{error_header},
+                    rule       => "error in_header",
+                    action     => 'move_to',
+                    folder     => 'INBOX.Spam',
+                    email_name => "$email_h->{Subject}",
+                };
             }
             if (   exists $email_h->{header}->{'ARC-Authentication-Results'}
                 && ref $email_h->{header}->{'ARC-Authentication-Results'} eq 'HASH'
@@ -401,7 +426,11 @@ sub main {
             }
 
             my $res;
-            if (ref $email_h->{header}->{Received} eq 'HASH') {
+            if (!exists $email_h->{header}->{Received} ) {
+                p $email_h->{header};
+                ...;
+            }
+            elsif (ref $email_h->{header}->{Received} eq 'HASH') {
                 $res = $email_h->{header}->{Received}->{a}->[1];
             }
             else {
