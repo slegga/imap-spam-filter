@@ -333,9 +333,11 @@ sub main {
                     };
                 }
             }
-            if (   exists $email_h->{header}->{error_header} && $email_h->{header}->{error_header}) {
+            if (   exists $email_h->{header}->{error_header} && defined $email_h->{header}->{error_header} && $email_h->{header}->{error_header}) {
+#                die Dumper $email_h;
+                my $x = $email_h->{header}->{error_header};
                 $action{$email_h->{uid}} = {
-                    reason     => $email_h->{header}->{error_header},
+                    reason     => "$x",
                     rule       => "error in_header",
                     action     => 'move_to',
                     folder     => 'INBOX.Spam',
