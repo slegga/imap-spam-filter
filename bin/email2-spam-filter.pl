@@ -72,7 +72,10 @@ sub orderval {
                 (qw /ip_address_in X-XClient-IP-Addr_contain Content-Type_contain From_contain/);
         }
         say "Last criteria: " . j($last);
-        die "Probably running line in yaml file";
+        my %data = %$rule_hr;
+        delete $data{criteria};
+        say "rule_hr uten expiration_days: " . j(\%data);
+        die "Probably error  in yaml file. Search last criteria and look for additional enter";
     }
     my $return = $rule_hr->{expiration_days} * 10000;
     $return -= 10 if exists $rule_hr->{whitelist};
