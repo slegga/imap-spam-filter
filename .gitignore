@@ -37,3 +37,4 @@ inc/
 *.LOG
 *.tdy
 .prove
+.vscode/
