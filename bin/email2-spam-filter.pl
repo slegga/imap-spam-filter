@@ -53,6 +53,7 @@ option 'debug!',   'Turn on debug output';
 option 'regexp=s', 'Regexp on email. Mainly for debugging purposes';
 option 'info!',    'Print out config data. And exit';
 option 'server=s', 'regexp på server name, for running only one or few not all';
+option 'latest!',  'Only process emails received since last run';
 
 
 has 'configfile' => $ENV{HOME} . '/etc/email2.yml';
@@ -179,6 +180,15 @@ sub main {
     }
 
     my $pf = DateTime::Format::Mail->new();
+
+    # Retrieve last run epoch for --latest option
+    my $last_run_epoch = 0;
+    if ($self->latest) {
+        my @tmp = $db->query('SELECT value FROM variables WHERE key = ?', 'last_run_epoch')->array;
+        $last_run_epoch = $tmp[0] // 0 if @tmp;
+        say "Only processing emails received since epoch $last_run_epoch";
+    }
+
     for my $emc (grep { ref $config_data->{connection}->{$_} eq 'HASH' } keys %{$config_data->{connection}}) {
         if ($self->server) {
             my $s = $self->server;
@@ -264,6 +274,10 @@ sub main {
         $imap->select('INBOX') or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
 
         @all = $imap->search('ALL') or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
+        if ($self->latest && $last_run_epoch > 0) {
+            @all = $imap->since($last_run_epoch) if @all;
+            say "Filtered to " . scalar(@all) . " emails received since epoch $last_run_epoch";
+        }
 
 #        warn join(' ',@all);
         my %keep;
@@ -682,6 +696,11 @@ sub main {
         # TODO: Only keep 1 or x of emails from this sender.
 
         $test_return = $imap->expunge;
+        if ($self->latest) {
+            my $current_epoch = time;
+            $db->query('REPLACE INTO variables(key,value) VALUES(?,?)', 'last_run_epoch', $current_epoch);
+            say "Updated last_run_epoch to $current_epoch";
+        }
         $imap->logout or die "Logout error: ", $imap->LastError, "\n";
     }    #connection
     return $test_return;
