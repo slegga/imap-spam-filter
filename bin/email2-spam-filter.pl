@@ -184,8 +184,8 @@ sub main {
     # Retrieve last run epoch for --latest option
     my $last_run_epoch = 0;
     if ($self->latest) {
-        my @tmp = $db->query('SELECT value FROM variables WHERE key = ?', 'last_run_epoch')->array;
-        $last_run_epoch = $tmp[0] // 0 if @tmp;
+my $tmp = $db->query('SELECT value FROM variables WHERE key = ?', 'last_run_epoch')->array;
+$last_run_epoch = $tmp->[0] // 0 if defined $tmp;
         say "Only processing emails received since epoch $last_run_epoch";
     }
 
@@ -233,10 +233,8 @@ sub main {
         my $epoch_key            = 'last_epoch_' . $config_data->{connection}->{$emc}->{Server};
 
         #warn "epoch_key: $epoch_key";
-        my @tmp = $db->query('SELECT value FROM variables WHERE key = ?', $epoch_key)->array;
-
-        #warn "tmp @tmp";
-        $last_read_sent_epoch = $tmp[0] if @tmp;
+        my $tmp = $db->query('SELECT value FROM variables WHERE key = ?', $epoch_key)->array;
+        $last_read_sent_epoch = defined $tmp ? $tmp->[0] : 0;
         $last_read_sent_epoch //= 0;
 
         #warn "last_read_sent_epoch: $last_read_sent_epoch";
@@ -446,8 +444,8 @@ sub main {
 
             my $res;
             if (!exists $email_h->{header}->{Received} ) {
-                p $email_h->{header};
-                ...;
+                warn "No Received header for uid $uid, falling back to Date";
+                $res = undef;  # fall through to Date fallback below
             }
             elsif (ref $email_h->{header}->{Received} eq 'HASH') {
                 $res = $email_h->{header}->{Received}->{a}->[1];
