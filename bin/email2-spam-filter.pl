@@ -695,9 +695,8 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
 
         $test_return = $imap->expunge;
         if ($self->latest) {
-            my $current_epoch = time;
-            $db->query('REPLACE INTO variables(key,value) VALUES(?,?)', 'last_run_epoch', $current_epoch);
-            say "Updated last_run_epoch to $current_epoch";
+            $db->query('REPLACE INTO variables(key,value) VALUES(?,?)', 'last_run_epoch', $epoch);
+            say "Updated last_run_epoch to $epoch (script startup time)";
         }
         $imap->logout or die "Logout error: ", $imap->LastError, "\n";
     }    #connection
