@@ -181,14 +181,6 @@ sub main {
 
     my $pf = DateTime::Format::Mail->new();
 
-    # Retrieve last run epoch for --latest option
-    my $last_run_epoch = 0;
-    if ($self->latest) {
-my $tmp = $db->query('SELECT value FROM variables WHERE key = ?', 'last_run_epoch')->array;
-$last_run_epoch = $tmp->[0] // 0 if defined $tmp;
-        say "Only processing emails received since epoch $last_run_epoch";
-    }
-
     for my $emc (grep { ref $config_data->{connection}->{$_} eq 'HASH' } keys %{$config_data->{connection}}) {
         if ($self->server) {
             my $s = $self->server;
@@ -220,6 +212,24 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
         }
         say $imap->Rfc3501_datetime(time()) if defined $imap;
 
+        # Reconnect IMAP if the connection was dropped, restoring the given folder.
+        my $ensure_imap_connected = sub {
+            my $folder = shift;
+            return 1 if $imap && $imap->IsConnected;
+            warn "IMAP disconnected from $emc, reconnecting...";
+            my $new_imap = Mail::IMAPClient->new(%connect);
+            unless ($new_imap) {
+                warn "Reconnect failed for $emc: $@";
+                return 0;
+            }
+            $imap = $new_imap;
+            if ($folder) {
+                $imap->select($folder)
+                    or do { warn "Re-select '$folder' failed: " . $imap->LastError; return 0 };
+            }
+            return 1;
+        };
+
 #    	$imap->connect or die "Could not connect: $@\n";
         my $folders = $imap->folders or die "$emc: List folders error: ", $imap->LastError, "\n" . Dumper \%connect;
 
@@ -233,9 +243,8 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
         my $epoch_key            = 'last_epoch_' . $config_data->{connection}->{$emc}->{Server};
 
         #warn "epoch_key: $epoch_key";
-        my $tmp = $db->query('SELECT value FROM variables WHERE key = ?', $epoch_key)->array;
-        $last_read_sent_epoch = defined $tmp ? $tmp->[0] : 0;
-        $last_read_sent_epoch //= 0;
+        my $sent_row = $db->query('SELECT value FROM variables WHERE key = ?', $epoch_key)->array;
+        $last_read_sent_epoch = $sent_row ? ($sent_row->[0] // 0) : 0;
 
         #warn "last_read_sent_epoch: $last_read_sent_epoch";
         my $current_read_sent_epoch = time;
@@ -271,10 +280,21 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
 
         $imap->select('INBOX') or die "$emc: Select '$folders->[0]' error: ", $imap->LastError, "\n";
 
+        # Retrieve per-account last run epoch for --latest option
+        my $latest_key     = 'last_run_epoch_' . $config_data->{connection}->{$emc}->{Server};
+        my $last_run_epoch = 0;
+        if ($self->latest) {
+            my $row = $db->query('SELECT value FROM variables WHERE key = ?', $latest_key)->array;
+            $last_run_epoch = $row ? ($row->[0] // 0) : 0;
+            say "$emc: only processing emails received since epoch $last_run_epoch (key $latest_key)";
+        }
+
         @all = $imap->search('ALL') or die "$emc: Fetch hash '$folders->[0]' error: ", $imap->LastError, "\n";
         if ($self->latest && $last_run_epoch > 0) {
-            @all = $imap->since($last_run_epoch) if @all;
-            say "Filtered to " . scalar(@all) . " emails received since epoch $last_run_epoch";
+            # 1-day lookback so emails missed by a previous run (e.g. after a rule change) get re-checked
+            my $since_epoch = $last_run_epoch - 86400;
+            @all = $imap->since($since_epoch) if @all;
+            say "Filtered to " . scalar(@all) . " emails received since epoch $since_epoch (last_run_epoch=$last_run_epoch, 1-day lookback)";
         }
 
 #        warn join(' ',@all);
@@ -296,13 +316,18 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
         for my $uid (@all) {
             my $next = 0;
             my $text;
-            eval {
-                $text = $imap->message_string($uid);
-                1;
-            } or do {
-                warn $@;
-                ...;
-            };
+            {
+                my $last_err;
+                for my $try (1 .. 3) {
+                    my $ok = eval { $text = $imap->message_string($uid); 1 };
+                    last if $ok;
+                    $last_err = $@ || $imap->LastError || 'unknown';
+                    warn "message_string($uid) failed on $emc (try $try/3): $last_err";
+                    last unless $ensure_imap_connected->('INBOX');
+                }
+                die "Giving up on $emc: message_string(uid=$uid) failed after 3 attempts. Last error: $last_err\n"
+                    unless defined $text;
+            }
 
             if (my $re = $self->regexp) {
                 next if !$text;
@@ -310,15 +335,21 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
                 $DB::single = 2;
             }
             my $email_h = $convert->msgtext2hash($text);
-            eval {
-                $email_h->{calculated}->{size} = $imap->size($uid);
-            };
-            if($@) {
-                warn "Error with imap";
-                warm $@;
-                p $imap;
-                ...;
-
+            {
+                my $last_err;
+                my $size_ok = 0;
+                for my $try (1 .. 3) {
+                    my $ok = eval {
+                        $email_h->{calculated}->{size} = $imap->size($uid);
+                        1;
+                    };
+                    if ($ok) { $size_ok = 1; last }
+                    $last_err = $@ || $imap->LastError || 'unknown';
+                    warn "size($uid) failed on $emc (try $try/3): $last_err";
+                    last unless $ensure_imap_connected->('INBOX');
+                }
+                die "Giving up on $emc: size(uid=$uid) failed after 3 attempts. Last error: $last_err\n"
+                    unless $size_ok;
             }
             $email_h->{uid} = $uid;
             if (exists $email_h->{header}->{'Authentication-Results'}
@@ -444,8 +475,8 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
 
             my $res;
             if (!exists $email_h->{header}->{Received} ) {
-                warn "No Received header for uid $uid, falling back to Date";
-                $res = undef;  # fall through to Date fallback below
+                p $email_h->{header};
+                ...;
             }
             elsif (ref $email_h->{header}->{Received} eq 'HASH') {
                 $res = $email_h->{header}->{Received}->{a}->[1];
@@ -695,8 +726,9 @@ $last_run_epoch = $tmp->[0] // 0 if defined $tmp;
 
         $test_return = $imap->expunge;
         if ($self->latest) {
-            $db->query('REPLACE INTO variables(key,value) VALUES(?,?)', 'last_run_epoch', $epoch);
-            say "Updated last_run_epoch to $epoch (script startup time)";
+            my $current_epoch = time;
+            $db->query('REPLACE INTO variables(key,value) VALUES(?,?)', $latest_key, $current_epoch);
+            say "Updated $latest_key to $current_epoch";
         }
         $imap->logout or die "Logout error: ", $imap->LastError, "\n";
     }    #connection
