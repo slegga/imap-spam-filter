@@ -103,7 +103,6 @@ sub main {
     my $CONFIGFILE = $self->configfile;
     my $config_data;
     my $test_return;
-    my $epoch = time;
     #
     #	SETUP database
     #
