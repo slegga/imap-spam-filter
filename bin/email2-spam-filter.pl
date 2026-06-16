@@ -316,7 +316,7 @@ sub main {
             my $next = 0;
             my $text;
             {
-                my $last_err;
+                my $last_err = 'none';
                 for my $try (1 .. 3) {
                     my $ok = eval { $text = $imap->message_string($uid); 1 };
                     last if $ok;
@@ -335,7 +335,7 @@ sub main {
             }
             my $email_h = $convert->msgtext2hash($text);
             {
-                my $last_err;
+                my $last_err = 'none';
                 my $size_ok = 0;
                 for my $try (1 .. 3) {
                     my $ok = eval {
